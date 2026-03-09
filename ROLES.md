@@ -8,7 +8,7 @@
 
 ## Team Structure
 
-### Founder — Product & Architecture Lead
+### Reiyyan Zafar- Founder — Product & Architecture Lead
 **Primary ownership:**
 - Product direction (what we build first, for whom, and why)
 - UX requirements for Event Cards and Signals (user-facing outputs)
@@ -27,7 +27,7 @@
 
 ---
 
-### Fairoz — AI/ML Engineer + Data Scientist + Data Engineer
+### Fairoz Khan — AI/ML Engineer + Data Scientist + Data Engineer
 **Role summary:** Owns the **"Signal Intelligence & Data Platform"** — the entire pipeline from raw news ingestion to validated, explainable signals.
 
 **Primary ownership:**
