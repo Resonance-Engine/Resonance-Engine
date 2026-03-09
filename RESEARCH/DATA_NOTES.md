@@ -2,7 +2,7 @@
 ## Resonance Engine Data Strategy
 
 **Last Updated:** March 2026  
-**Owner:** Fairoz (AI/ML + Data Platform)  
+**Owner and Co-Owner:** Reiyyan and Fairoz (AI/ML + Data Platform)  
 **Reviewers:** Product & Architecture Lead
 
 ---
