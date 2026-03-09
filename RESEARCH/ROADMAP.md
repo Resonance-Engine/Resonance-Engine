@@ -2,8 +2,8 @@
 ## Time Horizons & Milestones
 
 **Last Updated:** March 2026  
-**Owner:** Product & Architecture Lead  
-**Contributors:** Fairoz (AI/ML + Data Platform)
+**Owner and Co-Owner:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform)  
+**Reviewers:** Product & Architecture Lead
 
 ---
 
