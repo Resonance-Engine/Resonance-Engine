@@ -2,7 +2,7 @@
 ## Resonance Engine Technical Blueprint
 
 **Last Updated:** March 2026  
-**Owner:** Product & Architecture Lead  
+**Owner:** Reiyyan - Product & Architecture Lead  
 **Contributors:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform) 
 
 ---
