@@ -2,8 +2,8 @@
 ## How We Test, Validate & Avoid Fooling Ourselves
 
 **Last Updated:** March 2026  
-**Owner:** Fairoz (AI/ML + Data Platform)  
-**Reviewers:** Product & Architecture Lead
+**Owner and Co-Owner:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform)  
+**Reviewers:** Reiyyan - Product & Architecture Lead
 
 ---
 
