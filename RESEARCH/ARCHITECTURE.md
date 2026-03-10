@@ -3,7 +3,7 @@
 
 **Last Updated:** March 2026  
 **Owner:** Product & Architecture Lead  
-**Contributors:** Fairoz (AI/ML + Data Platform)
+**Contributors:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform) 
 
 ---
 
