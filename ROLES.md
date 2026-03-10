@@ -162,13 +162,13 @@
 
 | Decision Type | Owner | Requires Input From | Example |
 |---------------|-------|---------------------|---------|
-| **Product scope** | Founder | Reiyyan (feasibility check) | "Should we support crypto markets in MVP?" |
+| **Product scope** | Reiyyan | Reiyyan (feasibility check) | "Should we support crypto markets in MVP?" |
 | **Data source selection** | Reiyyan | Fairoz (technical eval) | "Use NewsAPI vs GDELT for MVP?" |
-| **System architecture** | Founder | Fairoz (implementation reality check) | "Use Kafka vs Redis Streams?" |
-| **NLP model choice** | Fairoz | Founder (UX impact review) | "FinBERT vs custom LSTM for sentiment?" |
-| **Evaluation metrics** | Reiyyan | Founder (business metric alignment) | "Track precision/recall vs just accuracy?" |
-| **UI/UX design** | Founder | Reiyyan (data constraints) | "Event card layout, signal dashboard wireframes" |
-| **Pricing model** | Founder | Reiyyan (compute cost estimates) | "Free tier vs $9.99/month premium?" |
+| **System architecture** | Reiyyan | Fairoz (implementation reality check) | "Use Kafka vs Redis Streams?" |
+| **NLP model choice** | Fairoz | Reiyyan (UX impact review) | "FinBERT vs custom LSTM for sentiment?" |
+| **Evaluation metrics** | Reiyyan | Reiyyan (business metric alignment) | "Track precision/recall vs just accuracy?" |
+| **UI/UX design** | Reiyyan | Reiyyan (data constraints) | "Event card layout, signal dashboard wireframes" |
+| **Pricing model** | Reiyyan | Reiyyan (compute cost estimates) | "Free tier vs $9.99/month premium?" |
 
 ### Escalation path:
 - If disagreement on technical decision → write pros/cons doc, discuss sync, Founder makes final call
