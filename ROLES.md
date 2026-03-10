@@ -162,13 +162,13 @@
 
 | Decision Type | Owner | Requires Input From | Example |
 |---------------|-------|---------------------|---------|
-| **Product scope** | Founder | Fairoz (feasibility check) | "Should we support crypto markets in MVP?" |
-| **Data source selection** | Founder | Fairoz (technical eval) | "Use NewsAPI vs GDELT for MVP?" |
+| **Product scope** | Founder | Reiyyan (feasibility check) | "Should we support crypto markets in MVP?" |
+| **Data source selection** | Reiyyan | Fairoz (technical eval) | "Use NewsAPI vs GDELT for MVP?" |
 | **System architecture** | Founder | Fairoz (implementation reality check) | "Use Kafka vs Redis Streams?" |
 | **NLP model choice** | Fairoz | Founder (UX impact review) | "FinBERT vs custom LSTM for sentiment?" |
-| **Evaluation metrics** | Fairoz | Founder (business metric alignment) | "Track precision/recall vs just accuracy?" |
-| **UI/UX design** | Founder | Fairoz (data constraints) | "Event card layout, signal dashboard wireframes" |
-| **Pricing model** | Founder | Fairoz (compute cost estimates) | "Free tier vs $9.99/month premium?" |
+| **Evaluation metrics** | Reiyyan | Founder (business metric alignment) | "Track precision/recall vs just accuracy?" |
+| **UI/UX design** | Founder | Reiyyan (data constraints) | "Event card layout, signal dashboard wireframes" |
+| **Pricing model** | Founder | Reiyyan (compute cost estimates) | "Free tier vs $9.99/month premium?" |
 
 ### Escalation path:
 - If disagreement on technical decision → write pros/cons doc, discuss sync, Founder makes final call
