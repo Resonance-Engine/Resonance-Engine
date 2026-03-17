@@ -1,0 +1,126 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="400" fill="#0a0a0a"/>
+  
+  <!-- Define gradients and effects -->
+  <defs>
+    <!-- Red glow gradient -->
+    <radialGradient id="redGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ff3333;stop-opacity:0.3" />
+      <stop offset="50%" style="stop-color:#ff1a1a;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#990000;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Liquid flow gradient -->
+    <linearGradient id="liquidFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff0000;stop-opacity:0.3" />
+      <stop offset="50%" style="stop-color:#ff3333;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff0000;stop-opacity:0.3" />
+    </linearGradient>
+    
+    <!-- Glow filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Strong glow -->
+    <filter id="strongGlow">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background glow -->
+  <circle cx="200" cy="200" r="140" fill="url(#redGlow)"/>
+  
+  <!-- Particles using exponential decay pattern -->
+  <!-- Near field particles -->
+  <circle cx="228" cy="158" r="2" fill="#ff3333" opacity="0.8"/>
+  <circle cx="152" cy="178" r="1.8" fill="#ff3333" opacity="0.75"/>
+  <circle cx="242" cy="238" r="1.9" fill="#ff3333" opacity="0.7"/>
+  <circle cx="168" cy="268" r="1.7" fill="#ff3333" opacity="0.65"/>
+  
+  <!-- Mid field particles -->
+  <circle cx="270" cy="138" r="1.5" fill="#ff3333" opacity="0.6"/>
+  <circle cx="118" cy="168" r="1.4" fill="#ff3333" opacity="0.55"/>
+  <circle cx="282" cy="278" r="1.6" fill="#ff3333" opacity="0.6"/>
+  <circle cx="130" cy="308" r="1.4" fill="#ff3333" opacity="0.5"/>
+  
+  <!-- Far field particles -->
+  <circle cx="302" cy="118" r="1.2" fill="#ff3333" opacity="0.45"/>
+  <circle cx="88" cy="148" r="1.1" fill="#ff3333" opacity="0.4"/>
+  <circle cx="315" cy="305" r="1.2" fill="#ff3333" opacity="0.45"/>
+  <circle cx="98" cy="332" r="1.1" fill="#ff3333" opacity="0.4"/>
+  
+  <!-- Asymmetric scatter -->
+  <circle cx="248" cy="105" r="1.1" fill="#ff3333" opacity="0.5"/>
+  <circle cx="297" cy="218" r="1" fill="#ff3333" opacity="0.45"/>
+  <circle cx="188" cy="325" r="1.2" fill="#ff3333" opacity="0.5"/>
+  <circle cx="102" cy="238" r="1" fill="#ff3333" opacity="0.4"/>
+  <circle cx="155" cy="95" r="1.1" fill="#ff3333" opacity="0.45"/>
+  
+  <!-- Sparse edge particles -->
+  <circle cx="318" cy="185" r="0.8" fill="#ff3333" opacity="0.3"/>
+  <circle cx="82" cy="255" r="0.8" fill="#ff3333" opacity="0.3"/>
+  
+  <!-- Connection lines -->
+  <line x1="228" y1="158" x2="200" y2="145" stroke="#ff3333" stroke-width="0.6" opacity="0.15"/>
+  <line x1="270" y1="138" x2="248" y2="105" stroke="#ff3333" stroke-width="0.6" opacity="0.1"/>
+  <line x1="242" y1="238" x2="200" y2="255" stroke="#ff3333" stroke-width="0.6" opacity="0.15"/>
+  <line x1="282" y1="278" x2="315" y2="305" stroke="#ff3333" stroke-width="0.6" opacity="0.1"/>
+  <line x1="152" y1="178" x2="118" y2="168" stroke="#ff3333" stroke-width="0.6" opacity="0.12"/>
+  <line x1="168" y1="268" x2="130" y2="308" stroke="#ff3333" stroke-width="0.6" opacity="0.12"/>
+  
+  <!-- Main diamond mark (centered and larger) -->
+  <g transform="translate(200, 200)">
+    
+    <!-- Outer diamond frame -->
+    <path d="M 0 -70 L 70 0 L 0 70 L -70 0 Z" 
+          fill="none" 
+          stroke="#2a2a2a" 
+          stroke-width="2"/>
+    
+    <!-- Inner diamond -->
+    <path d="M 0 -58 L 58 0 L 0 58 L -58 0 Z" 
+          fill="none"
+          stroke="url(#liquidFlow)" 
+          stroke-width="2"
+          filter="url(#glow)"/>
+    
+    <!-- Horizontal liquid wave flow -->
+    <path d="M -70 0 Q -35 -15, 0 0 T 70 0" 
+          fill="none" 
+          stroke="url(#liquidFlow)" 
+          stroke-width="2" 
+          filter="url(#glow)"/>
+    
+    <!-- Vertical liquid wave flow -->
+    <path d="M 0 -70 Q 15 -35, 0 0 T 0 70" 
+          fill="none" 
+          stroke="url(#liquidFlow)" 
+          stroke-width="2" 
+          opacity="0.7"
+          filter="url(#glow)"/>
+    
+    <!-- Center core -->
+    <circle cx="0" cy="0" r="8" fill="#1a1a1a"/>
+    <circle cx="0" cy="0" r="5.5" fill="#ff3333" filter="url(#strongGlow)"/>
+    <circle cx="0" cy="0" r="3" fill="#ff0000"/>
+    <circle cx="0" cy="0" r="1.5" fill="#ffffff"/>
+    
+    <!-- Corner energy nodes -->
+    <circle cx="0" cy="-58" r="2.5" fill="#ff3333" opacity="0.8"/>
+    <circle cx="58" cy="0" r="2.5" fill="#ff3333" opacity="0.8"/>
+    <circle cx="0" cy="58" r="2.5" fill="#ff3333" opacity="0.8"/>
+    <circle cx="-58" cy="0" r="2.5" fill="#ff3333" opacity="0.8"/>
+    
+  </g>
+  
+</svg>
