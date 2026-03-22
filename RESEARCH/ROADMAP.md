@@ -1,9 +1,10 @@
 # Resonance Engine — Product Roadmap
 ## Time Horizons & Milestones
 
-**Last Updated:** March 2026  
-**Owner and Co-Owner:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform)  
+**Last Updated:** March 2026
+**Owner and Co-Owner:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform)
 **Reviewers:** Reiyyan - Product & Architecture Lead
+**Revision:** v0.2 — Added vector store, RAG-powered impact hypothesis, meaningful change gating, and gateway separation milestones (informed by AgentPredict architecture review)
 
 ---
 
@@ -38,6 +39,11 @@ We prioritize **learning velocity** over feature completeness in early stages. E
   - Add Loughran-McDonald lexicon lookups
   - Create simple keyword-based event type classifier (earnings, guidance, FDA, lawsuit)
   - Evaluate on 100 hand-labeled news articles
+- 🔄 **Meaningful change gating**
+  - Implement content-hash deduplication at ingestion layer
+  - Add story clustering (same entity + event type + ±2h window → skip duplicates)
+  - Filter boilerplate amended filings (diff against original, skip if <5% text delta)
+  - Gate on material change before events enter the agent pipeline
 - 🔄 **Evaluation harness v0.1**
   - Define offline metrics (entity resolution accuracy, event extraction F1)
   - Create labeled test set (100 events with ground truth)
@@ -47,6 +53,7 @@ We prioritize **learning velocity** over feature completeness in early stages. E
 - [ ] Can ingest 100 EDGAR filings in <10 minutes
 - [ ] Entity resolution achieves >85% precision on test set
 - [ ] Event extraction F1 score >0.60 (baseline, will improve)
+- [ ] Meaningful change gate filters >30% of duplicate/boilerplate events
 - [ ] All code has basic unit tests
 - [ ] Documentation is up-to-date (PRD, DATA_NOTES, ARCHITECTURE)
 
@@ -68,10 +75,18 @@ We prioritize **learning velocity** over feature completeness in early stages. E
   - Use LangGraph or equivalent for orchestration
   - Typed outputs between agents (JSON schemas)
   - Audit trail (log every intermediate artifact)
-- **Impact hypothesis agent**
+- **Vector store setup (Pinecone/Qdrant)**
+  - Provision vector store with namespaces per source (sec_edgar, gdelt, newsapi)
+  - Implement embedding pipeline (text-embedding-3-small or equivalent)
+  - Upsert all Phase 0 processed events to build initial knowledge base
+  - Implement retriever: top-K similar events by cosine similarity, filter >0.70
+- **Impact hypothesis agent (RAG-powered)**
   - Pull historical market data (Alpha Vantage / Finnhub)
   - Label events with post-event returns/volatility windows (1h, 4h, 24h)
+  - Retrieve similar historical events from vector store (cross-sector analogues)
+  - Combine structured SQL lookups + semantic retrieval for hypothesis grounding
   - Build simple statistical model: "events like this historically led to X% move with Y% probability"
+  - Attach evidence[] array to every signal (top 3-5 similar events with outcomes)
   - Confidence calibration: ensure probabilities match outcomes
 - **Signal schema v1**
   - Define JSON schema for signals (see SIGNAL_SPEC.md)
@@ -94,7 +109,9 @@ We prioritize **learning velocity** over feature completeness in early stages. E
 - [ ] Confidence calibration error <15% (acceptable for MVP)
 - [ ] Signal accuracy >55% vs. random baseline (+5% edge minimum)
 - [ ] False positive rate <30% (will tighten in later phases)
-- [ ] Every signal has citation trail + rationale
+- [ ] Every signal has citation trail + rationale + evidence[] array
+- [ ] Vector store contains 500+ embedded historical events
+- [ ] Average evidence retrieval returns 3+ items with similarity >0.70
 - [ ] Risk Gate blocks 100% of non-compliant outputs in test set
 
 ### Timeline: 6 weeks
@@ -122,9 +139,14 @@ We prioritize **learning velocity** over feature completeness in early stages. E
   - User preferences: filter by confidence threshold, event type, tickers
 - **Backend API v1**
   - REST endpoints: `/events`, `/signals`, `/entities/{ticker}`
-  - WebSocket for real-time signal push notifications
   - Rate limiting (prevent abuse)
   - API documentation (Swagger/OpenAPI)
+- **WebSocket gateway (separate service)**
+  - Split real-time signal push into dedicated gateway service
+  - `/ws/signals` — subscribe to streaming signal updates
+  - Buffer last N signals for late-joining clients (cursor-based catch-up)
+  - Fan-out to all connected browser clients, silent disconnect cleanup
+  - Message envelope: `{"type": "signal"|"event", "data": {...}}`
 - **News ingestion expansion**
   - Add GDELT ingestion (global news at scale)
   - Add NewsAPI ingestion (breaking news, developer tier)
@@ -279,9 +301,9 @@ We prioritize **learning velocity** over feature completeness in early stages. E
 
 | Phase | Timeline | Key Deliverable | Success Metric |
 |-------|----------|----------------|----------------|
-| **Phase 0: Foundation** | Weeks 1-4 | EDGAR ingestion + entity resolution + eval harness | >85% entity resolution precision |
-| **Phase 1: MVP Signals** | Weeks 5-10 | Agentic workflow + impact hypotheses + Risk Gate | >55% signal accuracy vs. baseline |
-| **Phase 2: User-Facing MVP** | Weeks 11-16 | Event cards UI + signal dashboard + alpha testing | 10 alpha testers, >95% uptime |
+| **Phase 0: Foundation** | Weeks 1-4 | EDGAR ingestion + entity resolution + eval harness + change gating | >85% entity resolution precision |
+| **Phase 1: MVP Signals** | Weeks 5-10 | Vector store + RAG-powered impact hypothesis + Risk Gate | >55% signal accuracy, 500+ embedded events |
+| **Phase 2: User-Facing MVP** | Weeks 11-16 | Event cards UI + signal dashboard + WS gateway + alpha testing | 10 alpha testers, >95% uptime |
 | **Phase 3: Validation** | Weeks 17-24 | Model improvements + user feedback loop | >60% signal accuracy, NPS >30 |
 | **Phase 4: Public Beta** | Weeks 25-36 | Public launch + pricing experiments + marketing | 500+ users, 10%+ conversion |
 | **Phase 5: Scale** | Month 10+ | Institutional product + global expansion | 10k users, $500k ARR |
@@ -336,6 +358,7 @@ We prioritize **learning velocity** over feature completeness in early stages. E
 
 ---
 
-**Document Status:** Draft v0.1  
-**Last Updated:** March 2026  
+**Document Status:** Draft v0.2
+**Last Updated:** March 2026
 **Next Review:** End of Phase 0 (Week 4)
+**Changelog:** v0.2 — Added meaningful change gating (Phase 0), vector store + RAG-powered impact hypothesis (Phase 1), WebSocket gateway separation (Phase 2), evidence[] requirements. Informed by AgentPredict architecture review.
