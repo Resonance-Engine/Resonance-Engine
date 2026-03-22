@@ -1,9 +1,10 @@
 # System Architecture & Design
 ## Resonance Engine Technical Blueprint
 
-**Last Updated:** March 2026  
-**Owner:** Reiyyan - Product & Architecture Lead  
-**Contributors:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform) 
+**Last Updated:** March 2026
+**Owner:** Reiyyan - Product & Architecture Lead
+**Contributors:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform)
+**Revision:** v0.2 — Added vector store layer, RAG-powered Impact Hypothesis Agent, meaningful change gating, WebSocket gateway separation (informed by AgentPredict architecture review)
 
 ---
 
@@ -31,6 +32,7 @@
 │  • Fetch news/filings (scheduled jobs, webhooks)                │
 │  • Normalize to common schema                                   │
 │  • Deduplicate (hash-based, URL-based)                          │
+│  • Meaningful change gating (filter boilerplate, amended dupes) │
 │  • Assign stable event IDs                                      │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -48,8 +50,12 @@
 │  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐       │
 │  │   Impact     │ → │  Risk/Policy │ → │    Signal    │       │
 │  │  Hypothesis  │   │     Gate     │   │    Store     │       │
-│  │    Agent     │   │    Agent     │   │              │       │
+│  │  Agent (RAG) │   │    Agent     │   │              │       │
 │  └──────────────┘   └──────────────┘   └──────────────┘       │
+│         ↕                                                       │
+│  ┌──────────────┐                                              │
+│  │ Vector Store │  (Pinecone/Qdrant — similarity retrieval)    │
+│  └──────────────┘                                              │
 │                                                                 │
 │  (Each agent has typed inputs/outputs, logs, error handling)   │
 └─────────────────────────────────────────────────────────────────┘
@@ -59,14 +65,15 @@
 │                      STORAGE LAYER                              │
 │  • PostgreSQL: events, signals, entities, users                │
 │  • Redis: cache (entity lookups, API responses)                │
+│  • Vector Store: event embeddings (similarity search)          │
 │  • S3: raw data archives (90-day retention)                    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      API & UI LAYER                             │
-│  • REST API (events, signals, entities)                        │
-│  • WebSocket (real-time signal push)                           │
+│  • REST API (events, signals, entities) — FastAPI              │
+│  • WebSocket Gateway (real-time signal push, separate service) │
 │  • React frontend (event cards, signal dashboard)              │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -114,6 +121,31 @@ External API → Fetch → Parse → Validate → Dedupe → Assign ID → Store
 - Hash function: `hash(source + URL + timestamp)`
 - Store hashes in Redis (expire after 7 days)
 - If hash exists → skip, else → process
+
+**Meaningful Change Gating (Phase 0):**
+
+Before events enter the 6-agent pipeline, gate on material change to save compute on expensive downstream agents and keep signal-to-noise high:
+- **Amended filings:** If an EDGAR filing is an amendment (e.g., 10-K/A), diff against the original — only re-process if substance changed
+- **Boilerplate detection:** Skip 10-K annual filings with <5% text delta from prior year (risk factor copy-paste)
+- **Story deduplication:** When multiple news sources cover the same event, cluster by entity + event type + timestamp window (±2h) and process only the first arrival
+- **Delta threshold:** For market data feeds, only emit events on meaningful change (e.g., probability delta >0.01, price move >0.5%)
+
+This pattern is borrowed from AgentPredict's agent design, where the polymarket agent only emits on delta >0.01 to avoid flooding the pipeline with noise.
+
+```python
+def is_meaningful_change(event: Event, recent_events: list[Event]) -> bool:
+    """Gate: only pass events that represent material new information."""
+    # Check content hash against recent events (dedup)
+    if event.content_hash in {e.content_hash for e in recent_events}:
+        return False
+    # Check entity+event_type cluster (same story, different source)
+    for recent in recent_events:
+        if (event.primary_ticker == recent.primary_ticker
+            and event.event_type == recent.event_type
+            and abs((event.timestamp - recent.timestamp).total_seconds()) < 7200):
+            return False
+    return True
+```
 
 **Example Code (Phase 0):**
 ```python
@@ -180,13 +212,51 @@ else:
   - Keyword rules (e.g., "FDA approval" → `fda_approval` event type)
 - **Validation:** F1 score >0.60 on test set
 
-#### Agent 4: Impact Hypothesis Agent
+#### Agent 4: Impact Hypothesis Agent (RAG-Powered)
 - **Input:** `Event` object (with event type + entities)
-- **Output:** `Signal` object (with `signal_text`, `confidence`, `rationale`, `uncertainty`)
+- **Output:** `Signal` object (with `signal_text`, `confidence`, `rationale`, `uncertainty`, `evidence[]`)
 - **Tools:**
+  - **Vector Store (Pinecone/Qdrant)** — retrieve top-K similar historical events by semantic similarity
   - Market data API (Alpha Vantage, Finnhub) for historical returns
   - Statistical model (e.g., "FDA approvals historically lead to +8% avg return in 24h")
 - **Validation:** Confidence calibration <10% error
+
+**RAG Flow (Phase 1):**
+```
+Event (with entities + event_type)
+    → Embed event summary (text-embedding-3-small or equivalent)
+    → Query vector store: "find K most similar historical events"
+    → Retrieved evidence: [{event_summary, ticker, outcome, similarity_score}, ...]
+    → Combine: structured SQL lookup (same ticker/event_type) + semantic retrieval (cross-sector analogues)
+    → Generate hypothesis grounded in retrieved evidence
+    → Confidence score backed by N similar precedents
+    → Output: Signal with evidence[] array
+```
+
+**Why RAG?** Without a vector store, the Impact Hypothesis Agent can only do exact-match SQL queries (same ticker, same event type). With semantic retrieval, it finds **analogous patterns across different companies and sectors** — e.g., "this CEO resignation resembles these 12 others across biotech." This directly strengthens Resonance's explainability differentiator.
+
+**Vector Store Design:**
+- **Provider:** Pinecone (managed, serverless) or Qdrant (self-hosted option)
+- **Embedding model:** OpenAI text-embedding-3-small (Phase 1) or fine-tuned financial embedding (Phase 3)
+- **Namespaces:** One per event source (sec_edgar, gdelt, newsapi) for filtered retrieval
+- **Upsert policy:** Every event that passes the meaningful change gate gets embedded and upserted — the store grows over time, building a proprietary historical knowledge base
+- **Retrieval:** Top-K (K=10) by cosine similarity, filtered by event_type or sector when relevant
+- **Supplementary, not primary:** PostgreSQL remains the source of truth. Vector store is a similarity index only.
+
+```python
+class EvidenceItem(BaseModel):
+    """A single piece of retrieved evidence backing a signal."""
+    event_id: str                    # ID of the historical event
+    event_summary: str               # What happened
+    ticker: str | None               # Which company (if applicable)
+    outcome: str                     # What was the market reaction
+    similarity_score: float          # Cosine similarity (0.0-1.0)
+    time_delta: str                  # How long ago this happened
+
+class Signal(BaseModel):
+    # ... existing fields ...
+    evidence: list[EvidenceItem]     # Retrieved similar historical events
+```
 
 #### Agent 5: Risk/Policy Gate Agent
 - **Input:** `Signal` object (draft)
@@ -248,6 +318,16 @@ result = workflow.run({"event": raw_event})
   - Deduplication hashes (expire after 7 days)
 - **Eviction policy:** LRU (least recently used)
 
+**Vector Store: Pinecone/Qdrant (Phase 1+)**
+- **Why:** Semantic similarity search for historical event retrieval — enables cross-sector pattern matching that SQL can't do
+- **Use cases:**
+  - Impact Hypothesis Agent retrieves top-K similar historical events
+  - Evidence grounding for signal rationale
+  - Builds proprietary knowledge base over time (every processed event gets embedded)
+- **Namespaces:** One per source (sec_edgar, gdelt, newsapi)
+- **Embedding model:** text-embedding-3-small (Phase 1), fine-tuned financial embedding (Phase 3)
+- **Role:** Supplementary index for similarity search — PostgreSQL remains source of truth
+
 **Archive: AWS S3**
 - **Why:** Cheap long-term storage for raw data
 - **Use cases:**
@@ -266,13 +346,29 @@ result = workflow.run({"event": raw_event})
   - `GET /events` — List recent events (paginated, filterable by ticker/date)
   - `GET /events/{event_id}` — Get single event (with full details)
   - `GET /signals` — List recent signals (paginated, filterable by confidence/ticker)
-  - `GET /signals/{signal_id}` — Get single signal (with rationale/citations)
+  - `GET /signals/{signal_id}` — Get single signal (with rationale/citations/evidence)
   - `GET /entities/{ticker}` — Get company info (CIK, name, recent events)
   - `POST /watchlist` — Add ticker to user's watchlist
   - `GET /watchlist` — Get user's watchlist
+  - `GET /health` — Health check endpoint
 - **Authentication:** JWT tokens (simple, stateless)
 - **Rate limiting:** 100 requests/minute per user (prevent abuse)
-- **WebSocket:** `/ws/signals` — Real-time push notifications for new signals
+
+**WebSocket Gateway (Phase 2, separate service):**
+
+The WebSocket real-time push is a **separate thin service** from the REST API. This pattern is borrowed from AgentPredict's gateway design:
+
+- **Why separate?** The REST API handles request/response (stateless, scales horizontally). WebSocket connections are long-lived and stateful (connection lifecycle, reconnection, fan-out). Mixing them creates operational complexity as you scale.
+- **Gateway responsibilities:**
+  - `/ws/signals` — Subscribe to real-time signal push
+  - `/health` — Health check
+  - Subscribe to new signals from PostgreSQL (LISTEN/NOTIFY or poll)
+  - Fan-out to all connected browser clients
+  - Buffer last N signals for late-joining clients (cursor-based catch-up)
+  - Silent removal of disconnected clients
+- **Message envelope:** `{"type": "signal"|"event", "data": {...}}`
+- **Phase 0-1:** WebSocket handling lives inside FastAPI (simple, no separation needed yet)
+- **Phase 2+:** Split into dedicated gateway service when real users connect
 
 **Frontend (Phase 2):**
 - **Framework:** React + TypeScript
@@ -327,8 +423,9 @@ result = workflow.run({"event": raw_event})
 | **Event log** | PostgreSQL | Kafka + PostgreSQL |
 | **Stream processing** | None (batch jobs) | Flink or Kafka Streams |
 | **Database** | PostgreSQL | PostgreSQL + TimescaleDB |
+| **Vector Store** | Pinecone (serverless free tier) | Pinecone/Qdrant (dedicated) |
 | **Cache** | Redis (single instance) | Redis Cluster |
-| **API** | FastAPI | FastAPI + Load Balancer |
+| **API** | FastAPI (monolith) | FastAPI + WS Gateway + Load Balancer |
 | **Frontend** | React + TypeScript | React + TypeScript |
 | **Deployment** | AWS EC2 (t3.small) | Docker + ECS/K8s |
 | **Monitoring** | Python logging | Prometheus + Grafana + OpenTelemetry |
@@ -420,6 +517,7 @@ result = workflow.run({"event": raw_event})
 
 ---
 
-**Document Status:** Draft v0.1  
-**Last Updated:** March 2026  
+**Document Status:** Draft v0.2
+**Last Updated:** March 2026
 **Next Review:** After Phase 0 prototype
+**Changelog:** v0.2 — Added vector store (Pinecone/Qdrant) as supplementary storage, RAG-powered Impact Hypothesis Agent, meaningful change gating at ingestion, WebSocket gateway separation for Phase 2+, evidence[] field on signals. Informed by AgentPredict architecture review.
