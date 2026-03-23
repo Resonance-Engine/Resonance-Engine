@@ -1,9 +1,10 @@
 # Signal Specification & Design
 ## How Signals Work in Resonance Engine
 
-**Last Updated:** March 2026  
-**Owner and Co-Owner:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform)  
+**Last Updated:** March 2026
+**Owner and Co-Owner:** Reiyyan (Product & Architecture) and Fairoz (AI/ML & Data Platform)
 **Reviewers:** Reiyyan - Product & Architecture Lead
+**Revision:** v0.2 — Added evidence[] array to signal schema (informed by AgentPredict architecture review)
 
 ---
 
@@ -32,19 +33,48 @@ A **signal** is a testable, actionable statement derived from an event that:
   "signal_type": "volatility_spike",
   "signal_text": "High probability of short-term volatility increase for AAPL in next 4 hours",
   "confidence": 0.78,
-  "rationale": "Historical precedent: guidance cuts typically trigger 2-5% intraday moves. Apple's Q2 guidance cut by 5% is material.",
+  "rationale": "Historical precedent: guidance cuts typically trigger 2-5% intraday moves. Apple's Q2 guidance cut by 5% is material. Across 23 similar guidance revisions (retrieved via semantic search), median intraday move was 3.1%.",
   "uncertainty": "Direction uncertain (could move up or down). Supply chain issues are complex and market reaction depends on broader tech sector sentiment.",
   "impact_window": "4h",
   "predicted_move": null,
   "actual_move": null,
+  "evidence": [
+    {
+      "event_id": "evt_20250815_042",
+      "event_summary": "AAPL Q3 2025 guidance cut by 3%, supply chain concerns cited",
+      "ticker": "AAPL",
+      "outcome": "+2.8% intraday move (direction: down then recovery)",
+      "similarity_score": 0.94,
+      "time_delta": "7 months ago"
+    },
+    {
+      "event_id": "evt_20241120_019",
+      "event_summary": "MSFT Q4 2024 guidance revision downward by 4%, cloud growth slowing",
+      "ticker": "MSFT",
+      "outcome": "-3.2% intraday move, recovered over 48h",
+      "similarity_score": 0.87,
+      "time_delta": "16 months ago"
+    },
+    {
+      "event_id": "evt_20250203_008",
+      "event_summary": "GOOGL Q1 2025 guidance cut by 6%, ad revenue headwinds",
+      "ticker": "GOOGL",
+      "outcome": "-4.1% intraday move",
+      "similarity_score": 0.82,
+      "time_delta": "13 months ago"
+    }
+  ],
   "citations": [
     {"type": "event", "id": "evt_20260309_001", "url": "https://sec.gov/..."},
-    {"type": "historical_data", "description": "AAPL guidance revisions 2020-2025 (n=12)"}
+    {"type": "historical_data", "description": "AAPL guidance revisions 2020-2025 (n=12)"},
+    {"type": "vector_retrieval", "description": "Top-3 similar guidance revision events (cosine similarity >0.80)"}
   ],
   "metadata": {
     "model_version": "v0.1.2",
     "generated_at": "2026-03-09T14:35:12Z",
-    "agent_chain": ["ingestion", "entity_resolution", "event_extraction", "impact_hypothesis", "risk_gate"]
+    "agent_chain": ["ingestion", "entity_resolution", "event_extraction", "impact_hypothesis", "risk_gate"],
+    "evidence_count": 3,
+    "avg_similarity": 0.88
   },
   "created_at": "2026-03-09T14:35:12Z"
 }
@@ -169,21 +199,68 @@ Every signal must cite its sources:
 
 ---
 
+## Evidence Array (RAG-Powered)
+
+Every signal must include an **evidence** array — retrieved similar historical events that ground the hypothesis. This is what makes confidence scores *trustworthy*: "0.78 confidence" means nothing without showing what it's based on.
+
+### Evidence Item Schema:
+```json
+{
+  "event_id": "evt_20250815_042",
+  "event_summary": "AAPL Q3 2025 guidance cut by 3%, supply chain concerns cited",
+  "ticker": "AAPL",
+  "outcome": "+2.8% intraday move (direction: down then recovery)",
+  "similarity_score": 0.94,
+  "time_delta": "7 months ago"
+}
+```
+
+### Evidence Fields:
+| Field | Type | Description |
+|-------|------|-------------|
+| **event_id** | string | ID of the historical event in our database |
+| **event_summary** | string | What happened (human-readable) |
+| **ticker** | string \| null | Which company (null for sector-wide events) |
+| **outcome** | string | What was the market reaction |
+| **similarity_score** | float (0.0-1.0) | Cosine similarity to the triggering event |
+| **time_delta** | string | How long ago this happened (human-readable) |
+
+### Evidence Quality Rules:
+- **Minimum evidence:** Every signal should have at least 1 evidence item (Risk Gate warns if 0)
+- **Ideal evidence:** 3-5 items with similarity_score >0.70
+- **Cross-sector bonus:** Evidence from different tickers/sectors strengthens the signal (pattern is generalizable, not ticker-specific)
+- **Recency weighting:** More recent evidence is more relevant (market regimes change)
+- **Staleness warning:** If all evidence is >3 years old, add uncertainty note about regime change
+
+### How Evidence is Retrieved:
+1. Event summary is embedded using text-embedding-3-small (or equivalent)
+2. Vector store (Pinecone/Qdrant) returns top-K similar historical events (K=10)
+3. Filter to similarity_score >0.70
+4. Enrich with actual market outcomes from PostgreSQL
+5. Rank by similarity_score, take top 3-5
+
+---
+
 ## Signal Generation Pipeline
 ```
-Event (with entities + event_type) 
-    → Impact Hypothesis Agent 
-        → Query historical data (Alpha Vantage, Finnhub)
-        → Find similar events (same ticker + event_type, past 5 years)
+Event (with entities + event_type)
+    → Impact Hypothesis Agent (RAG-powered)
+        → Embed event summary (text-embedding-3-small)
+        → Retrieve top-K similar events from vector store (Pinecone/Qdrant)
+        → Query historical data (Alpha Vantage, Finnhub) for structured lookups
+        → Combine: semantic retrieval (cross-sector analogues) + SQL (exact matches)
         → Compute avg return, volatility, volume in impact window (1h, 4h, 24h)
         → Fit statistical model (e.g., "FDA approvals → +8% avg, σ=5%")
-        → Generate confidence score (based on sample size, variance)
+        → Generate confidence score (based on sample size, variance, evidence quality)
+        → Attach evidence[] array (top 3-5 similar events with outcomes)
     → Risk/Policy Gate Agent
         → Validate citations (event exists? historical data query valid?)
+        → Validate evidence (similarity scores reasonable? outcomes present?)
         → Check confidence bounds (reject if >0.9 without human review)
         → Enforce disclaimers ("not investment advice")
         → Append uncertainty statement (if missing)
     → Signal Store (PostgreSQL)
+    → Upsert event embedding to vector store (grows knowledge base)
     → API/UI (serve to users)
 ```
 
@@ -217,6 +294,8 @@ Event (with entities + event_type)
 - [ ] Every signal has a rationale (non-empty, >50 chars)
 - [ ] Every signal has an uncertainty statement (non-empty, >20 chars)
 - [ ] Every signal has at least one citation (event or historical data)
+- [ ] Every signal has an evidence[] array (warn if empty, ideal: 3-5 items)
+- [ ] Evidence items have similarity_score >0.70
 - [ ] Confidence calibration error <15% on validation set
 - [ ] Signal accuracy >55% on backtest set
 
@@ -343,6 +422,7 @@ The **Risk/Policy Gate Agent** enforces these rules:
 
 ---
 
-**Document Status:** Draft v0.1  
-**Last Updated:** March 2026  
+**Document Status:** Draft v0.2
+**Last Updated:** March 2026
 **Next Review:** After Phase 1 signal generation prototype
+**Changelog:** v0.2 — Added evidence[] array to signal schema, Evidence section with quality rules and retrieval flow, updated signal generation pipeline to include vector store retrieval + upsert. Informed by AgentPredict architecture review.

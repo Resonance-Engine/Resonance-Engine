@@ -1,0 +1,340 @@
+Resonance Engine — Project Skeleton
+=====================================
+
+Last Updated: March 2026
+Revision: v0.1
+Owners: Reiyyan (Product & Architecture) + Fairoz (AI/ML & Data Platform)
+Informed by: AgentPredict architecture review (March 2026)
+
+---
+Context
+
+2-person team. Phase 0 (Foundation). Frontend V1 exists on main.
+Backend is greenfield — this skeleton defines the full directory structure
+so both developers can work in parallel. Every file has clear ownership,
+typed interfaces, and TODO markers.
+
+---
+Directory Structure
+
+/Resonance-Engine/
+├── RESEARCH/                              # Documentation (both)
+│   ├── ARCHITECTURE.md                    # System design & tech stack
+│   ├── DATA_NOTES.md                      # Data sources, APIs, schemas
+│   ├── EVALUATION.md                      # Metrics, backtesting methodology
+│   ├── PRD.md                             # Product vision & requirements
+│   ├── REFERENCES.md                      # APIs, papers, tools, reading list
+│   ├── RISKS_GUARDRAILS.md                # Legal, model, user risk + compliance
+│   ├── ROADMAP.md                         # 5-phase timeline & milestones
+│   ├── SIGNAL_SPEC.md                     # Signal schema, taxonomy, evidence
+│   └── projectskeleton.txt               # This file
+│
+├── backend/                               # Python backend — Fairoz
+│   ├── pyproject.toml                     # Project metadata + dependencies (PEP 621)
+│   ├── requirements.txt                   # Pinned production dependencies
+│   ├── requirements-dev.txt               # Dev/test dependencies
+│   ├── .env.example                       # Environment variable template
+│   ├── alembic.ini                        # Database migration config
+│   │
+│   ├── src/
+│   │   ├── __init__.py
+│   │   │
+│   │   ├── models/                        # Pydantic schemas — source of truth
+│   │   │   ├── __init__.py
+│   │   │   ├── event.py                   # Event schema (raw + canonical)
+│   │   │   ├── signal.py                  # Signal schema (with evidence[])
+│   │   │   ├── entity.py                  # Entity schema (ticker, CIK, name)
+│   │   │   └── evidence.py                # EvidenceItem schema
+│   │   │
+│   │   ├── ingestion/                     # Data ingestion layer — Fairoz
+│   │   │   ├── __init__.py
+│   │   │   ├── edgar/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── client.py              # SEC EDGAR API client (httpx)
+│   │   │   │   ├── parser.py              # XML/SGML filing parser
+│   │   │   │   └── tasks.py               # Celery tasks (poll + ingest)
+│   │   │   ├── gdelt/                     # Phase 2
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── client.py
+│   │   │   │   └── tasks.py
+│   │   │   ├── newsapi/                   # Phase 2
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── client.py
+│   │   │   │   └── tasks.py
+│   │   │   ├── normalizer.py              # Normalize raw → canonical Event
+│   │   │   ├── deduplicator.py            # Hash-based + Redis dedup
+│   │   │   └── change_gate.py             # Meaningful change gating
+│   │   │
+│   │   ├── agents/                        # Agentic workflow — Fairoz
+│   │   │   ├── __init__.py
+│   │   │   ├── pipeline.py                # LangGraph workflow orchestration
+│   │   │   ├── ingestion_agent.py         # Raw → Event object
+│   │   │   ├── entity_resolution.py       # Company mentions → tickers/CIKs
+│   │   │   ├── event_extraction.py        # Event type + sentiment + summary
+│   │   │   ├── impact_hypothesis.py       # RAG-powered hypothesis generation
+│   │   │   ├── risk_gate.py               # Compliance enforcement
+│   │   │   └── state.py                   # PipelineState (shared typed state)
+│   │   │
+│   │   ├── rag/                           # RAG / Vector Store layer — Fairoz
+│   │   │   ├── __init__.py
+│   │   │   ├── embedder.py                # Text → embedding (OpenAI / sentence-transformers)
+│   │   │   ├── retriever.py               # Vector store query (top-K similar events)
+│   │   │   ├── vector_store.py            # Pinecone/Qdrant client wrapper
+│   │   │   └── evidence_builder.py        # Retrieved events → EvidenceItem[]
+│   │   │
+│   │   ├── nlp/                           # NLP models & tools — Fairoz
+│   │   │   ├── __init__.py
+│   │   │   ├── finbert.py                 # FinBERT sentiment classifier
+│   │   │   ├── loughran_mcdonald.py       # Finance-specific lexicon lookups
+│   │   │   └── entity_resolver.py         # SEC companyfacts.zip + fuzzy matching
+│   │   │
+│   │   ├── storage/                       # Database layer — Fairoz
+│   │   │   ├── __init__.py
+│   │   │   ├── database.py                # SQLAlchemy engine + session factory
+│   │   │   ├── models.py                  # SQLAlchemy ORM models
+│   │   │   ├── event_repo.py              # Event CRUD operations
+│   │   │   ├── signal_repo.py             # Signal CRUD operations
+│   │   │   ├── entity_repo.py             # Entity CRUD operations
+│   │   │   └── migrations/                # Alembic migration scripts
+│   │   │       ├── env.py
+│   │   │       └── versions/
+│   │   │
+│   │   ├── api/                           # REST API — Reiyyan (Phase 2)
+│   │   │   ├── __init__.py
+│   │   │   ├── app.py                     # FastAPI application factory
+│   │   │   ├── routes/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── events.py              # GET /events, GET /events/{id}
+│   │   │   │   ├── signals.py             # GET /signals, GET /signals/{id}
+│   │   │   │   ├── entities.py            # GET /entities/{ticker}
+│   │   │   │   ├── watchlist.py           # POST/GET /watchlist
+│   │   │   │   └── health.py              # GET /health
+│   │   │   ├── deps.py                    # Dependency injection (DB session, etc.)
+│   │   │   └── middleware.py              # Rate limiting, CORS, auth
+│   │   │
+│   │   ├── gateway/                       # WebSocket gateway — Reiyyan (Phase 2)
+│   │   │   ├── __init__.py
+│   │   │   ├── server.py                  # FastAPI + /ws endpoint + /health
+│   │   │   ├── signal_subscriber.py       # Listens for new signals (PG NOTIFY or poll)
+│   │   │   ├── broadcaster.py             # Fan-out to all WS clients
+│   │   │   └── buffer.py                  # Cursor-based catch-up for late joiners
+│   │   │
+│   │   ├── evaluation/                    # Eval & backtesting — Fairoz
+│   │   │   ├── __init__.py
+│   │   │   ├── metrics.py                 # Precision, recall, F1, Brier score
+│   │   │   ├── calibration.py             # Confidence calibration (Platt scaling)
+│   │   │   ├── backtester.py              # Look-ahead bias, survivorship, PBO
+│   │   │   ├── drift_detector.py          # Chi-squared drift monitoring
+│   │   │   └── experiment_tracker.py      # MLflow / W&B integration
+│   │   │
+│   │   ├── config.py                      # Pydantic Settings (env vars → typed config)
+│   │   └── celery_app.py                  # Celery application factory
+│   │
+│   └── tests/
+│       ├── conftest.py                    # Shared fixtures (DB, Redis, mock clients)
+│       ├── unit/
+│       │   ├── test_normalizer.py
+│       │   ├── test_deduplicator.py
+│       │   ├── test_change_gate.py
+│       │   ├── test_entity_resolver.py
+│       │   ├── test_event_extraction.py
+│       │   ├── test_impact_hypothesis.py
+│       │   ├── test_risk_gate.py
+│       │   ├── test_retriever.py
+│       │   ├── test_evidence_builder.py
+│       │   ├── test_calibration.py
+│       │   └── test_metrics.py
+│       ├── integration/
+│       │   ├── test_edgar_ingestion.py    # EDGAR fetch → parse → store
+│       │   ├── test_agent_pipeline.py     # Full pipeline end-to-end
+│       │   └── test_rag_retrieval.py      # Embed → store → retrieve
+│       └── api/
+│           ├── test_edgar_api.py          # Live EDGAR API connectivity
+│           ├── test_vector_store_api.py   # Live Pinecone/Qdrant connectivity
+│           └── test_market_data_api.py    # Live Alpha Vantage/Finnhub
+│
+├── frontend/                              # React frontend — Reiyyan
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── public/
+│   │   └── bg.mp4
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── index.css
+│       ├── context/
+│       │   └── AuthContext.jsx
+│       ├── components/
+│       │   ├── Globe.jsx
+│       │   ├── GlassPanel.jsx
+│       │   ├── LogoIntro.jsx
+│       │   ├── Navbar.jsx
+│       │   ├── NoiseOverlay.jsx
+│       │   └── ProtectedRoute.jsx
+│       ├── pages/
+│       │   ├── Landing.jsx
+│       │   ├── About.jsx
+│       │   ├── CommandCore.jsx            # Signal dashboard (Phase 2)
+│       │   ├── GateIgnition.jsx           # Auth gate
+│       │   └── SignalResolution.jsx        # Signal detail view (Phase 2)
+│       ├── hooks/                         # Phase 2
+│       │   └── useSignalStream.ts         # WS lifecycle + message routing
+│       ├── types/                         # Phase 2
+│       │   ├── events.ts                  # TS mirrors of backend schemas
+│       │   └── signals.ts
+│       └── tests/                         # Phase 2
+│           └── hooks/
+│               └── useSignalStream.test.ts
+│
+├── UI Design/                             # Design assets — Reiyyan
+│
+├── docker-compose.yml                     # Local dev: PostgreSQL + Redis (Phase 1)
+├── .env.example                           # Root-level env var template
+├── README.md
+├── ROLES.md
+├── logo.svg
+├── resonancelogonotext.svg
+└── public/
+
+---
+Key Schemas (Pydantic — Source of Truth)
+
+Event:
+  event_id         str (UUID)
+  timestamp        datetime
+  source           Literal["SEC_EDGAR", "GDELT", "NEWSAPI"]
+  url              str
+  raw_text         str
+  content_hash     str (SHA-256, for dedup)
+  entities         list[Entity]
+  event_type       str | None
+  summary          str | None
+  confidence       float | None
+  metadata         dict
+
+Entity:
+  ticker           str
+  cik              str | None
+  name             str
+  sic_code         str | None
+
+Signal:
+  signal_id        str (UUID)
+  event_id         str (FK → Event)
+  timestamp        datetime
+  ticker           str
+  signal_type      Literal["volatility_spike", "positive_drift", "negative_drift",
+                           "volume_surge", "watch"]
+  signal_text      str
+  confidence       float (0.0–1.0, calibrated)
+  rationale        str (>50 chars)
+  uncertainty      str (>20 chars)
+  impact_window    Literal["1h", "4h", "24h", "1w"]
+  predicted_move   float | None
+  actual_move      float | None
+  evidence         list[EvidenceItem]
+  citations        list[Citation]
+  metadata         dict (model_version, agent_chain, evidence_count, avg_similarity)
+
+EvidenceItem:
+  event_id         str
+  event_summary    str
+  ticker           str | None
+  outcome          str
+  similarity_score float (0.0–1.0)
+  time_delta       str
+
+---
+Ownership Map
+
+  Component               Owner         Phase
+  ──────────────────────  ────────────  ─────
+  RESEARCH/ docs          Both          0
+  backend/src/models/     Fairoz        0
+  backend/src/ingestion/  Fairoz        0
+  backend/src/agents/     Fairoz        1
+  backend/src/rag/        Fairoz        1
+  backend/src/nlp/        Fairoz        0
+  backend/src/storage/    Fairoz        0
+  backend/src/evaluation/ Fairoz        0–1
+  backend/src/api/        Reiyyan       2
+  backend/src/gateway/    Reiyyan       2
+  backend/tests/          Fairoz        0+
+  frontend/               Reiyyan       0 (V1 done), 2+
+  docker-compose.yml      Fairoz        1
+
+---
+Build Order / Dependencies
+
+  1. backend/src/models/        Must exist first — all other code imports these
+  2. backend/src/config.py      Environment config (DB URLs, API keys, etc.)
+  3. backend/src/storage/       Database layer — independently testable
+  4. backend/src/ingestion/     Depends on models + storage
+  5. backend/src/nlp/           FinBERT, entity resolver — independently testable
+  6. backend/src/rag/           Depends on models + vector store credentials
+  7. backend/src/agents/        Depends on ingestion + nlp + rag + storage
+  8. backend/src/evaluation/    Depends on storage (reads events/signals)
+  9. backend/src/api/           Depends on storage + agents (Phase 2)
+  10. backend/src/gateway/      Depends on storage (Phase 2)
+  11. frontend/ hooks/types     Depends on API being live (Phase 2)
+
+---
+Verification
+
+  Unit tests:     pytest backend/tests/unit/ -v
+  Integration:    pytest backend/tests/integration/ -v (requires DB + Redis)
+  API tests:      pytest backend/tests/api/ -v -m api (live external APIs)
+  Frontend:       npm test (Vitest, Phase 2)
+  Full stack:     docker compose up → run integration tests → verify pipeline
+
+---
+Environment Variables (.env.example)
+
+  # Database
+  DATABASE_URL=postgresql+asyncpg://resonance:resonance@localhost:5432/resonance
+  REDIS_URL=redis://localhost:6379/0
+
+  # SEC EDGAR
+  EDGAR_USER_AGENT=Resonance Engine team@resonance-engine.com
+
+  # Vector Store (Phase 1)
+  PINECONE_API_KEY=
+  PINECONE_INDEX_NAME=resonance-events
+  PINECONE_ENVIRONMENT=
+
+  # Embeddings (Phase 1)
+  OPENAI_API_KEY=
+
+  # Market Data (Phase 1)
+  ALPHA_VANTAGE_API_KEY=
+  FINNHUB_API_KEY=
+
+  # News (Phase 2)
+  NEWSAPI_KEY=
+  GDELT_BASE_URL=https://api.gdeltproject.org/api/v2
+
+  # Celery
+  CELERY_BROKER_URL=redis://localhost:6379/1
+  CELERY_RESULT_BACKEND=redis://localhost:6379/2
+
+---
+Notes
+
+  - This skeleton is informed by the AgentPredict project architecture
+    review (March 2026). Key patterns adopted:
+    1. RAG-powered Impact Hypothesis Agent (vector store for evidence retrieval)
+    2. evidence[] on every signal (grounded, trustworthy confidence scores)
+    3. Meaningful change gating at ingestion (filter noise before agents)
+    4. WebSocket gateway separation (Phase 2, clean real-time architecture)
+
+  - Patterns NOT adopted from AgentPredict (wrong tradeoffs for 2-person team):
+    C++, gRPC, ring buffers, service-per-agent Docker topology
+
+  - Frontend V1 already exists on main (landing page, globe, navbar, auth).
+    Phase 2 will add signal dashboard components and WS hooks.
+
+  - Every backend module has a corresponding test file.
+    No unimplemented logic left silently empty — TODO markers where needed.
