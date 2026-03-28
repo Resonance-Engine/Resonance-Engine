@@ -84,7 +84,7 @@ export default function Globe() {
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
     renderer.setSize(el.clientWidth, el.clientHeight)
     renderer.setClearColor(0x0a0a0a, 0)
     renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -98,7 +98,7 @@ export default function Globe() {
     const composer = new EffectComposer(renderer)
     composer.addPass(new RenderPass(scene, camera))
     const bloom = new UnrealBloomPass(
-      new THREE.Vector2(el.clientWidth, el.clientHeight), 1.4, 0.4, 0.1,
+      new THREE.Vector2(el.clientWidth, el.clientHeight), 1.0, 0.4, 0.15,
     )
     composer.addPass(bloom)
 
@@ -149,13 +149,6 @@ export default function Globe() {
       blending: THREE.AdditiveBlending, depthWrite: false,
     })
 
-    const headMat = new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.022, map: dotTex,
-      transparent: true, opacity: 1.0, alphaTest: 0.01,
-      sizeAttenuation: true, depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    })
-
     function spawnArc() {
       if (landVecs.length < 2) return
       const a = landVecs[Math.floor(Math.random() * landVecs.length)]
@@ -163,16 +156,22 @@ export default function Globe() {
       do { b = landVecs[Math.floor(Math.random() * landVecs.length)] }
       while (b === a)
 
-      const pts    = makeArcPoints(a, b, R, ARC_SEGMENTS)
+      const pts     = makeArcPoints(a, b, R, ARC_SEGMENTS)
       const lineGeo = new THREE.BufferGeometry().setFromPoints(pts)
       lineGeo.setDrawRange(0, 0)
       const line = new THREE.Line(lineGeo, arcLineMat())
       globe.add(line)
 
-      // Moving head dot
+      // Each arc gets its own head material so fade can mutate it directly
+      const arcHeadMat = new THREE.PointsMaterial({
+        color: 0xffffff, size: 0.022, map: dotTex,
+        transparent: true, opacity: 1.0, alphaTest: 0.01,
+        sizeAttenuation: true, depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
       const headGeo = new THREE.BufferGeometry()
       headGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3))
-      const head = new THREE.Points(headGeo, headMat)
+      const head = new THREE.Points(headGeo, arcHeadMat)
       globe.add(head)
 
       activeArcs.push({ line, lineGeo, head, headGeo, pts, progress: 0, phase: 'draw', hold: 0, opacity: 0.7 })
@@ -202,12 +201,12 @@ export default function Globe() {
         } else if (arc.phase === 'fade') {
           arc.opacity -= 0.018
           arc.line.material.opacity = Math.max(0, arc.opacity)
-          arc.head.material = arc.head.material.clone()
           arc.head.material.opacity = Math.max(0, arc.opacity)
           if (arc.opacity <= 0) {
             globe.remove(arc.line)
             globe.remove(arc.head)
             arc.line.material.dispose()
+            arc.head.material.dispose()
             arc.lineGeo.dispose()
             arc.headGeo.dispose()
             activeArcs.splice(i, 1)
