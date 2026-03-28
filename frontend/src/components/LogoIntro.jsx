@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import FloatingLetters from './FloatingLetters'
 
 function mapRange(value, inMin, inMax) {
   return Math.min(1, Math.max(0, (value - inMin) / (inMax - inMin)))
@@ -60,6 +61,8 @@ export default function LogoIntro() {
         className="sticky top-0 h-screen flex items-center justify-center overflow-hidden"
         style={{ background: '#0a0a0a', cursor: 'crosshair' }}
       >
+        <FloatingLetters />
+
         {/* Red radial glow — builds with progress */}
         <div
           className="absolute inset-0 pointer-events-none"

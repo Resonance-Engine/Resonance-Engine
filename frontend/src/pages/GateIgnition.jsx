@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import NoiseOverlay from '../components/NoiseOverlay'
+import FloatingLetters from '../components/FloatingLetters'
 import { useAuth } from '../context/AuthContext'
 
 function generateParticles() {
@@ -73,6 +74,7 @@ export default function GateIgnition() {
       className="relative min-h-screen overflow-hidden"
       onMouseMove={handleMouseMove}
     >
+      <FloatingLetters mode="drift" />
       <NoiseOverlay />
       <div className="vignette" />
 
