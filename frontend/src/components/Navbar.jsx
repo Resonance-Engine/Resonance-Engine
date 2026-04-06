@@ -18,14 +18,8 @@ export default function Navbar() {
       <div className="relative flex items-center justify-between px-8 py-4">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-7 h-7 border border-red-600 flex items-center justify-center rotate-45 transition-all group-hover:bg-red-600/10 group-hover:shadow-[0_0_15px_rgba(255,51,51,0.3)]">
-            <span className="text-[9px] font-black -rotate-45 text-white">RE</span>
-          </div>
-          <div>
-            <div className="text-[11px] font-black tracking-[0.3em] uppercase">Resonance Engine</div>
-            <div className="text-[8px] text-red-600 tracking-[0.4em] uppercase opacity-70">Intelligence Platform</div>
-          </div>
+        <Link to="/" className="flex items-center group">
+          <img src="/logo.svg" alt="Resonance Engine" className="h-10 transition-opacity group-hover:opacity-80" />
         </Link>
 
         {/* Nav Links */}
