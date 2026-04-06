@@ -24,6 +24,7 @@ export default function GateIgnition() {
   const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 })
   const [particles] = useState(generateParticles)
   const [visible, setVisible] = useState(false)
+  const [error, setError] = useState('')
   const rafRef = useRef(null)
 
   useEffect(() => {
@@ -60,13 +61,19 @@ export default function GateIgnition() {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setIgnited(true)
-    setTimeout(() => {
-      login()
-      navigate('/dashboard')
-    }, 3000)
+    setError('')
+    const form = e.target
+    const username = form.elements[0].value
+    const password = form.elements[1].value
+    try {
+      await login(username, password)
+      setIgnited(true)
+      setTimeout(() => navigate('/dashboard'), 3000)
+    } catch (err) {
+      setError(err.message || 'Authentication failed')
+    }
   }
 
   return (
@@ -181,6 +188,12 @@ export default function GateIgnition() {
                 <label className="sci-fi-label">Neural Key</label>
                 <input type="password" className="sci-fi-input" placeholder="••••••••" required />
               </div>
+
+              {error && (
+                <div className="text-[10px] uppercase tracking-[0.3em] text-red-500 text-center">
+                  {error}
+                </div>
+              )}
 
               <div className="flex flex-col items-center gap-6 pt-4">
                 <button type="submit" className="btn-ignition group overflow-hidden">

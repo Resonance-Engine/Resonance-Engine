@@ -13,7 +13,7 @@ Financial intelligence platform that transforms unstructured SEC filings and new
 **Phase 0 Goal (achieved):** Prove the core pipeline works end-to-end with EDGAR filings.
 **Phase 1 Goal (achieved):** Generate evidence-backed signals via LangGraph agent pipeline + RAG.
 
-**What's implemented (working code, 182 tests passing):**
+**What's implemented (working code, 195 tests passing):**
 - Pydantic models: `src/models/` (event, signal, entity, evidence)
 - SQLAlchemy ORM: `src/storage/models.py` (EventModel, SignalModel, EntityModel with indexes)
 - Config: `src/config.py` (Pydantic Settings, all env vars)
@@ -46,16 +46,24 @@ Financial intelligence platform that transforms unstructured SEC filings and new
 - Market data client: `src/ingestion/market_data.py` (Alpha Vantage + Finnhub)
 - Docker Compose: `docker-compose.yml` (PostgreSQL 16 + Redis 7)
 
+- FastAPI REST API: `src/api/app.py` (app factory with CORS, lifespan, 12 routes)
+- API routes: signals, events, entities, auth, health, pipeline (all implemented)
+- API deps: `src/api/deps.py` (DB session injection, bearer token auth)
+- API middleware: `src/api/middleware.py` (CORS, request logging, error handling)
+- Frontend API client: `frontend/src/api/client.js` (auth, signals, events, entities, pipeline)
+- Frontend auth: `frontend/src/context/AuthContext.jsx` (token-based login/logout)
+- Frontend wiring: CommandCore + SignalResolution fetch from backend API with fallback
+- Vite proxy: `frontend/vite.config.js` (proxy /api → localhost:8000)
+
 **What's skeleton/TODO (stubs only):**
-- All API routes: `src/api/`
 - All gateway: `src/gateway/`
 - News ingestion: `src/ingestion/gdelt/`, `src/ingestion/newsapi/`
 
 ## Phase 2 Priorities (in order)
 
-1. **FastAPI REST API** — `src/api/` (events, signals, entities endpoints)
-2. **WebSocket gateway** — `src/gateway/` (real-time signal push)
-3. **Frontend integration** — Wire signal dashboard to backend API
+1. ~~**FastAPI REST API**~~ — DONE: `src/api/` (12 routes, auth, CORS)
+2. ~~**Frontend integration**~~ — DONE: API client, auth flow, dashboard wiring
+3. **WebSocket gateway** — `src/gateway/` (real-time signal push)
 4. **News ingestion expansion** — GDELT + NewsAPI
 5. **Labeled test set** — 100 events with ground truth for evaluation
 6. **Live end-to-end test** — Docker Compose up → Alembic migrate → real EDGAR filing → signal
