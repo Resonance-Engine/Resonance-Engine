@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import NoiseOverlay from '../components/NoiseOverlay'
 import GlassPanel from '../components/GlassPanel'
 import { getSignal } from '../api/client'
+import { useAuth } from '../context/AuthContext'
 
 const FALLBACK_CATALYSTS = [
   { id: 1, time: '14:02:11', source: 'REUTERS', headline: 'Central bank hints at liquidity injection for Q4.' },
@@ -14,6 +15,7 @@ const FALLBACK_CATALYSTS = [
 export default function SignalResolution() {
   const [searchParams] = useSearchParams()
   const signalId = searchParams.get('id')
+  const { user, logout } = useAuth()
 
   const [currentTime, setCurrentTime] = useState('')
   const [signal, setSignal] = useState(null)
@@ -131,22 +133,39 @@ export default function SignalResolution() {
 
       {/* Header HUD */}
       <header className="fixed top-0 left-0 w-full p-8 flex justify-between items-start z-50 pointer-events-none">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border border-red-600 flex items-center justify-center rotate-45">
-            <span className="text-[10px] font-black -rotate-45">RE</span>
-          </div>
-          <div>
-            <h1 className="text-xs font-bold tracking-[0.4em] uppercase">Resonance Engine</h1>
-            <p className="text-[9px] text-red-600 tracking-widest uppercase opacity-80">Signal Analysis Mode</p>
-          </div>
+        <div className="flex items-center gap-3 pointer-events-auto">
+          <Link to="/">
+            <img src="/logo.svg" alt="Resonance Engine" className="h-8 hover:opacity-80 transition-opacity" />
+          </Link>
+          <p className="text-[9px] text-red-600 tracking-widest uppercase opacity-80">Signal Analysis Mode</p>
         </div>
 
-        <div className="flex gap-12 text-right">
-          <div className="hidden md:block">
-            <div className="label-mini">Ticker</div>
-            <div className="text-[10px] font-mono uppercase">{signal?.ticker || 'N/A'}</div>
-          </div>
-          <div>
+        <div className="flex items-start gap-6 pointer-events-auto">
+          <nav className="flex gap-3 items-center mt-1">
+            <Link to="/" className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">Home</Link>
+            <span className="text-gray-800">|</span>
+            <Link to="/dashboard" className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">Dashboard</Link>
+            <span className="text-gray-800">|</span>
+            <Link to="/about" className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">About</Link>
+            {user?.role === 'admin' && (
+              <>
+                <span className="text-gray-800">|</span>
+                <Link to="/admin" className="text-[9px] uppercase tracking-[0.3em] text-red-500 hover:text-red-400 transition-colors">Admin</Link>
+              </>
+            )}
+            <span className="text-gray-800">|</span>
+            <button
+              onClick={() => { logout(); }}
+              className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-red-500 transition-colors"
+            >
+              Logout
+            </button>
+          </nav>
+          <div className="text-right">
+            <div className="hidden md:block">
+              <div className="label-mini">Ticker</div>
+              <div className="text-[10px] font-mono uppercase">{signal?.ticker || 'N/A'}</div>
+            </div>
             <div className="label-mini">System Time</div>
             <div className="text-[10px] font-mono">{currentTime}</div>
           </div>

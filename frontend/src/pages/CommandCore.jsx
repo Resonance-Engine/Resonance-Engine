@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import NoiseOverlay from '../components/NoiseOverlay'
 import GlassPanel from '../components/GlassPanel'
 import { listSignals } from '../api/client'
@@ -62,7 +62,7 @@ function TickerBlock() {
 
 export default function CommandCore() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const [volatility, setVolatility] = useState(64)
   const [sessionTime, setSessionTime] = useState('00:00:00')
   const [signals, setSignals] = useState(FALLBACK_SIGNALS)
@@ -177,17 +177,31 @@ export default function CommandCore() {
           </div>
         </div>
 
-        <div className="flex items-start gap-8">
-          <div className="text-right">
+        <div className="flex items-start gap-4">
+          <nav className="flex gap-3 items-center mt-1">
+            <Link to="/" className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">Home</Link>
+            <span className="text-gray-800">|</span>
+            <Link to="/about" className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">About</Link>
+            <span className="text-gray-800">|</span>
+            <Link to="/signal" className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">Signals</Link>
+            {user?.role === 'admin' && (
+              <>
+                <span className="text-gray-800">|</span>
+                <Link to="/admin" className="text-[9px] uppercase tracking-[0.3em] text-red-500 hover:text-red-400 transition-colors">Admin</Link>
+              </>
+            )}
+            <span className="text-gray-800">|</span>
+            <button
+              onClick={handleLogout}
+              className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-red-500 transition-colors"
+            >
+              Logout
+            </button>
+          </nav>
+          <div className="text-right ml-4">
             <div className="text-[10px] uppercase tracking-[0.5em] text-gray-500 mb-1">Session Duration</div>
             <div className="text-xl monospaced font-light">{sessionTime}</div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-[9px] uppercase tracking-[0.4em] text-gray-600 hover:text-red-500 transition-colors border border-white/10 px-3 py-2 hover:border-red-500/30"
-          >
-            Logout
-          </button>
         </div>
       </header>
 

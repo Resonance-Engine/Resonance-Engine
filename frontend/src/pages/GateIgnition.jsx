@@ -18,6 +18,7 @@ function generateParticles() {
 export default function GateIgnition() {
   const navigate = useNavigate()
   const { isAuthenticated, login } = useAuth()
+  const [email, setEmail] = useState('')
   const [ignited, setIgnited] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
@@ -181,7 +182,7 @@ export default function GateIgnition() {
             <form onSubmit={handleSubmit} className="space-y-10">
               <div>
                 <label className="sci-fi-label">Operator Identity</label>
-                <input type="text" className="sci-fi-input" placeholder="Enter identification code" required />
+                <input type="text" className="sci-fi-input" placeholder="Enter identification code" required value={email} onChange={e => setEmail(e.target.value)} />
               </div>
 
               <div>
