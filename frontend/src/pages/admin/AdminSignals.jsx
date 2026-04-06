@@ -1,14 +1,52 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import DataTable from '../../components/admin/DataTable'
 import StatusBadge from '../../components/admin/StatusBadge'
 import { mockSignals } from '../../data/mockAdmin'
+import { listSignals } from '../../api/client'
+
+function mapApiSignal(s) {
+  return {
+    id: s.signal_id,
+    ticker: s.ticker,
+    type: s.signal_type || 'unknown',
+    confidence: s.confidence,
+    impact: s.impact_window || '—',
+    status: 'active',
+    timestamp: s.timestamp,
+    summary: s.rationale || s.signal_text || '—',
+  }
+}
 
 export default function AdminSignals() {
   const [filter, setFilter] = useState('all')
+  const [signals, setSignals] = useState(mockSignals)
+  const [apiConnected, setApiConnected] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  const fetchSignals = useCallback(async () => {
+    try {
+      const data = await listSignals({ limit: 100 })
+      if (data.items && data.items.length > 0) {
+        setSignals(data.items.map(mapApiSignal))
+        setApiConnected(true)
+      }
+    } catch {
+      // Backend not available — keep mock data
+      setApiConnected(false)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSignals()
+    const pollId = setInterval(fetchSignals, 10000)
+    return () => clearInterval(pollId)
+  }, [fetchSignals])
 
   const filtered = filter === 'all'
-    ? mockSignals
-    : mockSignals.filter(s => s.status === filter)
+    ? signals
+    : signals.filter(s => s.status === filter)
 
   const columns = [
     { key: 'ticker',     label: 'Ticker',     render: (v) => <span className="text-red-500 font-medium">{v}</span> },
@@ -38,7 +76,13 @@ export default function AdminSignals() {
           <h1 className="text-sm uppercase tracking-[0.5em] font-light">Signal Browser</h1>
           <div className="h-px w-8 bg-red-600 mt-2" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2 mr-4">
+            <div className={`w-1.5 h-1.5 rounded-full ${apiConnected ? 'bg-green-500 animate-pulse' : 'bg-red-600'}`} />
+            <span className="text-[9px] uppercase tracking-[0.3em] text-gray-500">
+              {loading ? 'Loading...' : apiConnected ? `${signals.length} from API` : 'Mock Data'}
+            </span>
+          </div>
           {['all', 'active', 'pending', 'expired'].map(f => (
             <button
               key={f}

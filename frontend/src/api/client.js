@@ -119,3 +119,18 @@ export async function runPipeline(rawText, options = {}) {
 export async function checkHealth() {
   return request('/health')
 }
+
+// ── Admin helpers ────────────────────────────────────────────
+export async function getAdminStats() {
+  const [health, signals, events] = await Promise.all([
+    checkHealth().catch(() => ({ status: 'unavailable', database: 'unavailable' })),
+    listSignals({ limit: 1 }).catch(() => null),
+    listEvents({ limit: 1 }).catch(() => null),
+  ])
+  return {
+    health,
+    totalSignals: signals?.total ?? 0,
+    totalEvents: events?.total ?? 0,
+    apiConnected: health.status !== 'unavailable',
+  }
+}
