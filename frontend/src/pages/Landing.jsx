@@ -4,6 +4,7 @@ import NoiseOverlay from '../components/NoiseOverlay'
 import Navbar from '../components/Navbar'
 import LogoIntro from '../components/LogoIntro'
 import Globe from '../components/Globe'
+import FloatingLetters from '../components/FloatingLetters'
 
 const FEATURES = [
   {
@@ -75,6 +76,8 @@ export default function Landing() {
 
       {/* ── HERO ── */}
       <section id="hero" className="relative min-h-screen flex flex-row items-center overflow-hidden bg-[#0a0a0a]">
+
+        <FloatingLetters />
 
         {/* Left — text */}
         <div className="relative z-10 flex flex-col items-start justify-center px-16 w-full md:w-1/2 text-left min-h-screen py-20">
