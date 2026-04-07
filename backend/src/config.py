@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     # Embeddings (Phase 1)
     openai_api_key: str = ""
+    gemini_api_key: str = ""
 
     # Market Data (Phase 1)
     alpha_vantage_api_key: str = ""

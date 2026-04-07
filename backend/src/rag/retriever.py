@@ -40,9 +40,16 @@ async def retrieve_similar_events(
         List of {id, score, metadata} dicts, sorted by score descending.
     """
     # Build rich text for embedding
+    # Try to get ticker from entities, fall back to metadata or None
+    ticker = None
+    if event.entities:
+        ticker = event.entities[0].ticker
+    elif hasattr(event, "metadata") and isinstance(event.metadata, dict):
+        ticker = event.metadata.get("ticker")
+
     event_text = prepare_event_text({
         "event_type": event.event_type,
-        "ticker": event.entities[0].ticker if event.entities else None,
+        "ticker": ticker,
         "summary": event.summary,
         "raw_text": event.raw_text,
     })

@@ -63,3 +63,16 @@ async def run_pipeline(
     except Exception as e:
         logger.exception("Pipeline execution failed")
         raise HTTPException(status_code=500, detail=f"Pipeline error: {e}") from e
+
+
+@router.get("/scheduler/status")
+async def scheduler_status(_user: str = Depends(get_current_user)) -> dict:
+    """Return the current scheduler status and active polling loops."""
+    from src import scheduler
+    return {
+        "running": scheduler._running,
+        "loops": [
+            {"name": t.get_name(), "done": t.done()}
+            for t in scheduler._tasks
+        ],
+    }

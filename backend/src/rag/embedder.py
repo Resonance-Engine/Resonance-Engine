@@ -1,32 +1,68 @@
 """Text embedding — converts event summaries to vector representations.
 
-Uses OpenAI text-embedding-3-small (1536 dimensions, $0.02/1M tokens).
+Supports two backends:
+  1. Google Gemini text-embedding-004 (768 dimensions) — preferred
+  2. OpenAI text-embedding-3-small (1536 dimensions) — fallback
+
+Set GEMINI_API_KEY to use Gemini, or OPENAI_API_KEY for OpenAI.
 Lazy-loaded client to avoid import-time API key validation.
 """
 
 import logging
 from typing import Any
 
-import httpx
-
 from src.config import settings
 
 logger = logging.getLogger(__name__)
 
-MODEL = "text-embedding-3-small"
-DIMENSIONS = 1536
+# Gemini embedding config
+GEMINI_MODEL = "models/gemini-embedding-001"
+GEMINI_DIMENSIONS = 3072
+
+# OpenAI embedding config (fallback)
+OPENAI_MODEL = "text-embedding-3-small"
+OPENAI_DIMENSIONS = 1536
+
 MAX_BATCH_SIZE = 100
-MAX_TEXT_LENGTH = 8000  # ~2000 tokens, well within 8191 token limit
+MAX_TEXT_LENGTH = 8000
 
 _client: Any = None
+_backend: str = ""
+
+
+def _get_backend() -> str:
+    """Determine which embedding backend to use."""
+    if settings.gemini_api_key:
+        return "gemini"
+    if settings.openai_api_key:
+        return "openai"
+    return "none"
+
+
+def get_dimensions() -> int:
+    """Return the embedding dimensions for the active backend."""
+    backend = _get_backend()
+    if backend == "gemini":
+        return GEMINI_DIMENSIONS
+    return OPENAI_DIMENSIONS
 
 
 def _get_client():
-    """Lazy-initialize the OpenAI client."""
-    global _client
-    if _client is None:
-        from openai import AsyncOpenAI
-        _client = AsyncOpenAI(api_key=settings.openai_api_key)
+    """Lazy-initialize the embedding client."""
+    global _client, _backend
+    backend = _get_backend()
+
+    if _client is None or _backend != backend:
+        _backend = backend
+        if backend == "gemini":
+            from google import genai
+            _client = genai.Client(api_key=settings.gemini_api_key)
+        elif backend == "openai":
+            from openai import AsyncOpenAI
+            _client = AsyncOpenAI(api_key=settings.openai_api_key)
+        else:
+            raise RuntimeError("No embedding API key configured (set GEMINI_API_KEY or OPENAI_API_KEY)")
+
     return _client
 
 
@@ -37,19 +73,27 @@ async def embed_text(text: str) -> list[float]:
         text: Text to embed (truncated to MAX_TEXT_LENGTH chars).
 
     Returns:
-        Vector of DIMENSIONS floats.
+        Vector of floats (768 for Gemini, 1536 for OpenAI).
     """
     text = text[:MAX_TEXT_LENGTH].strip()
     if not text:
-        return [0.0] * DIMENSIONS
+        return [0.0] * get_dimensions()
 
     client = _get_client()
-    response = await client.embeddings.create(
-        input=[text],
-        model=MODEL,
-        dimensions=DIMENSIONS,
-    )
-    return response.data[0].embedding
+
+    if _backend == "gemini":
+        response = client.models.embed_content(
+            model=GEMINI_MODEL,
+            contents=text,
+        )
+        return response.embeddings[0].values
+    else:
+        response = await client.embeddings.create(
+            input=[text],
+            model=OPENAI_MODEL,
+            dimensions=OPENAI_DIMENSIONS,
+        )
+        return response.data[0].embedding
 
 
 async def embed_batch(texts: list[str]) -> list[list[float]]:
@@ -69,14 +113,21 @@ async def embed_batch(texts: list[str]) -> list[list[float]]:
 
     for i in range(0, len(texts), MAX_BATCH_SIZE):
         batch = [t[:MAX_TEXT_LENGTH].strip() or " " for t in texts[i:i + MAX_BATCH_SIZE]]
-        response = await client.embeddings.create(
-            input=batch,
-            model=MODEL,
-            dimensions=DIMENSIONS,
-        )
-        # Sort by index to preserve order
-        sorted_data = sorted(response.data, key=lambda x: x.index)
-        all_embeddings.extend(d.embedding for d in sorted_data)
+
+        if _backend == "gemini":
+            response = client.models.embed_content(
+                model=GEMINI_MODEL,
+                contents=batch,
+            )
+            all_embeddings.extend(e.values for e in response.embeddings)
+        else:
+            response = await client.embeddings.create(
+                input=batch,
+                model=OPENAI_MODEL,
+                dimensions=OPENAI_DIMENSIONS,
+            )
+            sorted_data = sorted(response.data, key=lambda x: x.index)
+            all_embeddings.extend(d.embedding for d in sorted_data)
 
     return all_embeddings
 
@@ -104,7 +155,6 @@ def prepare_event_text(event_data: dict) -> str:
         parts.append(f"Summary: {event_data['summary']}")
 
     if event_data.get("raw_text"):
-        # Use first 2000 chars of raw text
         parts.append(f"Content: {event_data['raw_text'][:2000]}")
 
     return "\n".join(parts) if parts else ""

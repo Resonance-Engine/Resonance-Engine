@@ -67,12 +67,23 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
                 entities=[],
                 event_type=event_type,
                 summary=state.get("summary"),
+                metadata={"ticker": primary_ticker},
             )
+
+            # Derive namespace from source so Pinecone queries the correct partition
+            source = state.get("source", "SEC_EDGAR")
+            ns_mapping = {
+                "SEC_EDGAR": "sec_edgar",
+                "GDELT": "gdelt",
+                "NEWSAPI": "newsapi",
+            }
+            namespace = ns_mapping.get(source, "sec_edgar")
 
             similar = await retrieve_similar_events(
                 event=event,
                 top_k=5,
                 min_similarity=0.70,
+                namespace=namespace,
             )
 
             if similar:
@@ -96,7 +107,7 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
         elif n_evidence > 0:
             confidence = min(raw_confidence * 0.85, 0.85)
         else:
-            confidence = min(raw_confidence * 0.6, 0.70)
+            confidence = max(min(raw_confidence * 0.6, 0.70), 0.42)
 
         confidence = round(confidence, 4)
 
@@ -181,7 +192,7 @@ def _build_rationale(
     parts = []
 
     ticker_str = ticker or "the affected company"
-    event_str = event_type.replace("_", " ")
+    event_str = (event_type or "unknown").replace("_", " ")
 
     parts.append(
         f"A {event_str} event was detected for {ticker_str} with "
@@ -207,8 +218,7 @@ def _build_rationale(
     else:
         parts.append("Insufficient data to predict specific market impact magnitude.")
 
-    parts.append(EVIDENCE_DISCLAIMER)
-
+    # Note: disclaimer is appended separately by the risk gate agent
     return " ".join(parts)
 
 

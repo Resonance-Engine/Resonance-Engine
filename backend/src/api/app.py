@@ -15,8 +15,15 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Manage application lifecycle — startup / shutdown."""
     logger.info("Resonance Engine API starting up")
+
+    # Start async EDGAR polling scheduler (replaces Celery Beat)
+    from src.scheduler import start_scheduler, stop_scheduler
+    await start_scheduler()
+
     yield
-    # Shutdown: dispose engine to close connection pool
+
+    # Shutdown: stop scheduler, dispose DB engine
+    await stop_scheduler()
     from src.storage.database import engine
     await engine.dispose()
     logger.info("Resonance Engine API shut down")

@@ -173,7 +173,7 @@ def _build_signal_text(
     predicted_move: float | None, impact_window: str,
 ) -> str:
     """Build the signal text — a concise, testable statement."""
-    event_str = event_type.replace("_", " ")
+    event_str = (event_type or "event").replace("_", " ")
     parts = [f"Signal for {ticker}: {event_str} detected."]
 
     if predicted_move is not None:
