@@ -100,14 +100,23 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
         impact_window = _determine_impact_window(event_type)
 
         # 4. Calibrate confidence
+        # Evidence quality is the primary driver. Sentiment adds a small bonus.
+        # Target ranges: 0 evidence → 42-50%, 1-2 → 52-65%, 3+ → 62-82%
         n_evidence = len(evidence_items)
+        sentiment_bonus = abs(sentiment_score) * 0.05  # 0-0.05 from sentiment strength
+
         if n_evidence >= 3:
             avg_similarity = sum(e.get("similarity_score", 0) for e in evidence_items) / n_evidence
-            confidence = min(raw_confidence * (0.7 + 0.3 * avg_similarity), 0.95)
+            evidence_depth = min(n_evidence / 5, 1.0) * 0.03  # up to 0.03 for 5+ evidence
+            # 5 evidence at 0.85 sim → 0.45 + 0.35*0.85 + 0.03 + ~0.01 = 0.787
+            # 3 evidence at 0.70 sim → 0.45 + 0.35*0.70 + 0.02 + ~0.01 = 0.725
+            # 5 evidence at 0.60 sim → 0.45 + 0.35*0.60 + 0.03 + ~0.01 = 0.700
+            confidence = min(0.45 + 0.35 * avg_similarity + evidence_depth + sentiment_bonus, 0.85)
         elif n_evidence > 0:
-            confidence = min(raw_confidence * 0.85, 0.85)
+            avg_similarity = sum(e.get("similarity_score", 0) for e in evidence_items) / n_evidence
+            confidence = min(0.40 + 0.25 * avg_similarity + sentiment_bonus, 0.65)
         else:
-            confidence = max(min(raw_confidence * 0.6, 0.70), 0.42)
+            confidence = max(min(raw_confidence * 0.6, 0.55), 0.42)
 
         confidence = round(confidence, 4)
 

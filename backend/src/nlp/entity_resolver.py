@@ -35,9 +35,26 @@ _AMBIGUOUS_TICKERS = {"A", "AN", "ALL", "ARE", "AT", "BE", "BIG", "CAN", "CAR", 
 
 # Patterns for extracting candidate company names from text
 _COMPANY_SUFFIXES = re.compile(
-    r"\b([A-Z][A-Za-z\s&\.\,]+?\s(?:Inc\.?|Corp\.?|Co\.?|Ltd\.?|LLC|LP|PLC|Group|Holdings?|Bancorp|Technologies|Therapeutics|Pharmaceuticals|Partners))\b"
+    r"\b([A-Z][A-Za-z\s&\.\,]+?\s(?:Inc\.?|Corp\.?|Corporation|Company|Co\.?|Ltd\.?|LLC|LP|PLC|Group|Holdings?|Bancorp|Technologies|Therapeutics|Pharmaceuticals|Partners|Financial|Semiconductor|Platforms|Entertainment|Motors|Dynamics|Electric|Energy|Aerospace|Sciences|Brands|Industries|Systems|Networks|Enterprises))\b"
 )
 _TICKER_IN_PARENS = re.compile(r"\(([A-Z]{1,5})\)")
+
+# Fallback mapping for well-known companies whose names lack standard suffixes
+_WELL_KNOWN_COMPANIES: dict[str, str] = {
+    "Apple": "AAPL", "Google": "GOOG", "Alphabet": "GOOG", "Amazon": "AMZN",
+    "Microsoft": "MSFT", "Tesla": "TSLA", "Meta": "META", "Netflix": "NFLX",
+    "NVIDIA": "NVDA", "Nvidia": "NVDA", "Intel": "INTC", "AMD": "AMD",
+    "Boeing": "BA", "Walmart": "WMT", "JPMorgan": "JPM", "Goldman Sachs": "GS",
+    "Morgan Stanley": "MS", "Pfizer": "PFE", "Moderna": "MRNA",
+    "Eli Lilly": "LLY", "Johnson & Johnson": "JNJ", "Broadcom": "AVGO",
+    "Capital One": "COF", "Discover Financial": "DFS", "Salesforce": "CRM",
+    "Adobe": "ADBE", "Uber": "UBER", "Airbnb": "ABNB", "Palantir": "PLTR",
+    "Snowflake": "SNOW", "CrowdStrike": "CRWD", "Costco": "COST",
+    "Target": "TGT", "Home Depot": "HD", "Disney": "DIS", "Visa": "V",
+    "Mastercard": "MA", "PayPal": "PYPL", "Lockheed Martin": "LMT",
+    "Raytheon": "RTX", "Chevron": "CVX", "ExxonMobil": "XOM",
+    "Berkshire Hathaway": "BRK-B", "UnitedHealth": "UNH",
+}
 
 
 def _cache_path() -> Path:
@@ -122,7 +139,10 @@ def load_company_lookup(data: dict | None = None) -> dict[str, Entity]:
         _name_to_entity[name_lower] = entity
         _ticker_to_entity[ticker.upper()] = entity
         if cik:
-            _cik_to_entity[cik] = entity
+            # Prefer common shares over preferred (e.g., BA over BA-PA)
+            existing = _cik_to_entity.get(cik)
+            if existing is None or "-" in existing.ticker and "-" not in ticker:
+                _cik_to_entity[cik] = entity
 
     _all_names = list(_name_to_entity.keys())
     _loaded = True
@@ -200,10 +220,18 @@ def resolve_entities(text: str) -> list[Entity]:
         if entity and entity.ticker not in resolved:
             resolved[entity.ticker] = entity
 
-    # 2. Company names with corporate suffixes
+    # 2. Well-known company names (catches names without standard suffixes)
+    text_lower = text.lower()
+    for name, ticker in _WELL_KNOWN_COMPANIES.items():
+        if name.lower() in text_lower:
+            entity = resolve_by_ticker(ticker)
+            if entity and entity.ticker not in resolved:
+                resolved[entity.ticker] = entity
+
+    # 3. Company names with corporate suffixes (for less common companies)
     for match in _COMPANY_SUFFIXES.finditer(text):
         name = match.group(1).strip()
-        entity = resolve_by_name(name, cutoff=0.7)
+        entity = resolve_by_name(name, cutoff=0.6)
         if entity and entity.ticker not in resolved:
             resolved[entity.ticker] = entity
 
