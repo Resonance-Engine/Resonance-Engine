@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config import settings
 from src.storage.database import async_session
 
 # ---------------------------------------------------------------------------
@@ -24,8 +25,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 _bearer = HTTPBearer(auto_error=False)
 
-# MVP: accept a static API key. Replace with JWT/OAuth in production.
-_VALID_TOKENS = {"resonance-dev-token-2026"}
+# MVP: accept a static API key loaded from env. Replace with JWT/OAuth in production.
+_VALID_TOKENS = {settings.auth_token} if settings.auth_token else set()
 
 
 async def get_current_user(

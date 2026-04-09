@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import NoiseOverlay from '../components/NoiseOverlay'
 import GlassPanel from '../components/GlassPanel'
-import { listSignals } from '../api/client'
+import { listSignals, connectSignalWS } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
 const FALLBACK_SIGNALS = [
@@ -70,9 +70,19 @@ export default function CommandCore() {
   const [chartData, setChartData] = useState([40, 55, 45, 60, 80, 75, 90, 85, 70, 65, 80, 95, 85, 70, 60])
   const [signalCount, setSignalCount] = useState(0)
   const [apiConnected, setApiConnected] = useState(false)
+  const [wsConnected, setWsConnected] = useState(false)
   const startTimeRef = useRef(Date.now())
 
-  // Fetch signals from backend
+  // Helper: add a log entry
+  const addLog = useCallback((msg) => {
+    setLogs(prev => [{
+      id: Date.now(),
+      time: `[${new Date().toLocaleTimeString('en-US', { hour12: false })}]`,
+      msg,
+    }, ...prev].slice(0, 8))
+  }, [])
+
+  // Initial REST fetch to load existing signals + signal count
   const fetchSignals = useCallback(async () => {
     try {
       const data = await listSignals({ limit: 10 })
@@ -80,24 +90,55 @@ export default function CommandCore() {
         setSignals(data.items.map(mapSignalToFeed))
         setSignalCount(data.total)
         setApiConnected(true)
-        setLogs(prev => [{
-          id: Date.now(),
-          time: `[${new Date().toLocaleTimeString('en-US', { hour12: false })}]`,
-          msg: `Fetched ${data.items.length} signals from backend.`,
-        }, ...prev].slice(0, 8))
       }
     } catch {
-      // Backend not running — use fallback data silently
       setApiConnected(false)
     }
   }, [])
 
+  // WebSocket for real-time push, REST poll as fallback
   useEffect(() => {
+    // Initial load via REST
     fetchSignals()
-    // Poll every 5 seconds for new signals
-    const pollId = setInterval(fetchSignals, 5000)
-    return () => clearInterval(pollId)
-  }, [fetchSignals])
+
+    // Connect WebSocket
+    const handle = connectSignalWS({
+      onSignal: (data) => {
+        setSignals(prev => [mapSignalToFeed(data), ...prev].slice(0, 10))
+        setSignalCount(prev => prev + 1)
+        addLog(`Live signal: ${data.ticker} (${Math.round(data.confidence * 100)}%)`)
+      },
+      onCatchUp: (items) => {
+        if (items.length > 0) {
+          const mapped = items.map(mapSignalToFeed).reverse()
+          setSignals(prev => {
+            const existingIds = new Set(prev.map(s => s.id))
+            const newOnes = mapped.filter(s => !existingIds.has(s.id))
+            return [...newOnes, ...prev].slice(0, 10)
+          })
+          addLog(`Synced ${items.length} buffered signals via WebSocket.`)
+        }
+      },
+      onOpen: () => {
+        setWsConnected(true)
+        setApiConnected(true)
+        addLog('WebSocket connected — real-time mode active.')
+      },
+      onClose: () => {
+        setWsConnected(false)
+      },
+    })
+
+    // Fallback: poll REST every 10s only when WS is disconnected
+    const pollId = setInterval(() => {
+      if (!wsConnected) fetchSignals()
+    }, 10000)
+
+    return () => {
+      handle.close()
+      clearInterval(pollId)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -158,9 +199,9 @@ export default function CommandCore() {
             <div className="space-y-1">
               <div className="text-[9px] uppercase tracking-widest text-gray-600">API Status</div>
               <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${apiConnected ? 'bg-green-500' : 'bg-red-600'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${wsConnected ? 'bg-green-500' : apiConnected ? 'bg-yellow-500' : 'bg-red-600'}`} />
                 <div className="text-[11px] monospaced uppercase tracking-wider">
-                  {apiConnected ? 'Backend Connected' : 'Fallback Mode'}
+                  {wsConnected ? 'Real-Time WS' : apiConnected ? 'REST Polling' : 'Fallback Mode'}
                 </div>
               </div>
             </div>
@@ -212,8 +253,8 @@ export default function CommandCore() {
         <aside className="col-span-12 lg:col-span-3 flex flex-col gap-4 overflow-hidden">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-[10px] uppercase tracking-[0.5em] text-gray-400">Intelligence Feed</h3>
-            <div className={`text-[9px] font-bold px-2 py-0.5 border ${apiConnected ? 'text-green-500 border-green-500/30' : 'text-red-500 border-red-500/30'}`}>
-              {apiConnected ? 'LIVE' : 'DEMO'}
+            <div className={`text-[9px] font-bold px-2 py-0.5 border ${wsConnected ? 'text-green-500 border-green-500/30' : apiConnected ? 'text-yellow-500 border-yellow-500/30' : 'text-red-500 border-red-500/30'}`}>
+              {wsConnected ? 'LIVE' : apiConnected ? 'POLLING' : 'DEMO'}
             </div>
           </div>
 

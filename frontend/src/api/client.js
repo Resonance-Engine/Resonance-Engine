@@ -120,6 +120,73 @@ export async function checkHealth() {
   return request('/health')
 }
 
+// ── WebSocket ────────────────────────────────────────────────
+/**
+ * Connect to the real-time signal WebSocket.
+ *
+ * @param {object} handlers
+ * @param {function} handlers.onSignal  - called with signal data object
+ * @param {function} handlers.onCatchUp - called with array of recent signals
+ * @param {function} handlers.onOpen    - called when connection opens
+ * @param {function} handlers.onClose   - called when connection closes
+ * @returns {{ close: function }} control handle
+ */
+export function connectSignalWS({ onSignal, onCatchUp, onOpen, onClose }) {
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const url = `${proto}//${window.location.host}/api/ws`
+  let ws = null
+  let pingInterval = null
+  let shouldReconnect = true
+
+  function connect() {
+    ws = new WebSocket(url)
+
+    ws.onopen = () => {
+      onOpen?.()
+      // Keepalive ping every 30s
+      pingInterval = setInterval(() => {
+        if (ws?.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping' }))
+        }
+      }, 30000)
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data)
+        if (msg.type === 'signal') {
+          onSignal?.(msg.data)
+        } else if (msg.type === 'catch_up') {
+          onCatchUp?.(msg.data)
+        }
+      } catch { /* ignore malformed messages */ }
+    }
+
+    ws.onclose = () => {
+      clearInterval(pingInterval)
+      onClose?.()
+      // Auto-reconnect after 3s
+      if (shouldReconnect) {
+        setTimeout(connect, 3000)
+      }
+    }
+
+    ws.onerror = () => {
+      ws?.close()
+    }
+  }
+
+  connect()
+
+  return {
+    close() {
+      shouldReconnect = false
+      clearInterval(pingInterval)
+      ws?.close()
+    },
+  }
+}
+
 // ── Admin helpers ────────────────────────────────────────────
 export async function getAdminStats() {
   const [health, signals, events] = await Promise.all([

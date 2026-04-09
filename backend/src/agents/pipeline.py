@@ -100,6 +100,13 @@ async def _store_signal_node(state: PipelineState) -> dict:
         await insert_signal(signal)
         logger.info("Stored signal %s for %s", signal.signal_id, signal.ticker)
 
+        # Broadcast to WebSocket clients
+        try:
+            from src.gateway.signal_subscriber import notify_new_signal
+            await notify_new_signal(signal.model_dump(mode="json"))
+        except Exception as ws_err:
+            logger.debug("WS broadcast skipped: %s", ws_err)
+
     except Exception as e:
         logger.warning("Failed to persist signal to DB (expected without PostgreSQL): %s", e)
         errors.append(f"store_signal: {e}")

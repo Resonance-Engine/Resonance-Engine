@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from src.api.middleware import setup_middleware
 from src.api.routes import auth, entities, events, health, pipeline, signals
+from src.gateway.server import router as ws_router
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,9 @@ def create_app() -> FastAPI:
     app.include_router(events.router, prefix="/api")
     app.include_router(entities.router, prefix="/api")
     app.include_router(pipeline.router, prefix="/api")
+
+    # WebSocket gateway (real-time signal push)
+    app.include_router(ws_router, prefix="/api")
 
     return app
 

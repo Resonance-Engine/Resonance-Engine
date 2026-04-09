@@ -5,16 +5,18 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: resonance-postgres
+    env_file:
+      - backend/.env
     environment:
-      POSTGRES_USER: resonance
-      POSTGRES_PASSWORD: resonance
-      POSTGRES_DB: resonance
+      POSTGRES_USER: ${POSTGRES_USER:-resonance}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resonance}
+      POSTGRES_DB: ${POSTGRES_DB:-resonance}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U resonance"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-resonance}"]
       interval: 5s
       timeout: 5s
       retries: 5

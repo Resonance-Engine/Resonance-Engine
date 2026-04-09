@@ -1,19 +1,17 @@
 """Auth routes — POST /auth/login, GET /auth/me."""
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from src.api.deps import get_current_user
+from src.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# MVP: static credentials. Replace with proper user store in production.
-_VALID_CREDENTIALS = {
-    "operator": "resonance2026",
-    "fairoz": "alpha",
-    "reiyyan": "alpha",
-    "admin": "admin",
-}
+# MVP: credentials loaded from env. Replace with proper user store in production.
+_VALID_CREDENTIALS: dict[str, str] = json.loads(settings.auth_credentials_json)
 
 
 class LoginRequest(BaseModel):
@@ -33,7 +31,7 @@ async def login(body: LoginRequest) -> LoginResponse:
     if expected_pw is None or expected_pw != body.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return LoginResponse(
-        token="resonance-dev-token-2026",
+        token=settings.auth_token,
         operator=body.username.lower(),
     )
 

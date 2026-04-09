@@ -30,11 +30,15 @@ class Settings(BaseSettings):
     newsapi_key: str = ""
     gdelt_base_url: str = "https://api.gdeltproject.org/api/v2"
 
+    # Auth (MVP — static token + credentials from env)
+    auth_token: str = ""
+    auth_credentials_json: str = "{}"
+
     # Celery
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/2"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()
