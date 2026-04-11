@@ -111,7 +111,7 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
 
         # 4. Calibrate confidence
         # Evidence quality is the primary driver. Sentiment adds a small bonus.
-        # Target ranges: 0 evidence → 42-50%, 1-2 → 52-65%, 3+ → 62-82%
+        # Target ranges: 0 evidence → 42-50%, 1-2 → 58-75%, 3+ → 68-85%
         n_evidence = len(evidence_items)
         sentiment_bonus = abs(sentiment_score) * 0.05  # 0-0.05 from sentiment strength
 
@@ -120,11 +120,14 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
             evidence_depth = min(n_evidence / 5, 1.0) * 0.03  # up to 0.03 for 5+ evidence
             # 5 evidence at 0.85 sim → 0.45 + 0.35*0.85 + 0.03 + ~0.01 = 0.787
             # 3 evidence at 0.70 sim → 0.45 + 0.35*0.70 + 0.02 + ~0.01 = 0.725
-            # 5 evidence at 0.60 sim → 0.45 + 0.35*0.60 + 0.03 + ~0.01 = 0.700
             confidence = min(0.45 + 0.35 * avg_similarity + evidence_depth + sentiment_bonus, 0.85)
         elif n_evidence > 0:
             avg_similarity = sum(e.get("similarity_score", 0) for e in evidence_items) / n_evidence
-            confidence = min(0.40 + 0.25 * avg_similarity + sentiment_bonus, 0.65)
+            # Reward high-similarity matches even with few evidence items
+            # 1 evidence at 0.89 sim → 0.42 + 0.33*0.89 + ~0.01 = 0.724
+            # 2 evidence at 0.80 sim → 0.42 + 0.33*0.80 + ~0.01 = 0.694
+            # 1 evidence at 0.70 sim → 0.42 + 0.33*0.70 + ~0.01 = 0.661
+            confidence = min(0.42 + 0.33 * avg_similarity + sentiment_bonus, 0.75)
         else:
             confidence = max(min(raw_confidence * 0.6, 0.55), 0.42)
 

@@ -69,9 +69,11 @@ def test_rationale_includes_evidence():
     assert "historical" in rationale.lower()
 
 
-def test_rationale_includes_disclaimer():
+def test_rationale_no_evidence_fallback():
+    """When no evidence, rationale should mention sentiment-based analysis."""
     rationale = _build_rationale("AAPL", "earnings", "positive", 0.85, 0.03, [], 0)
-    assert "not guarantee" in rationale.lower()
+    # Disclaimer is appended by risk_gate agent, not here
+    assert "sentiment" in rationale.lower()
 
 
 # --- Uncertainty Building ---
