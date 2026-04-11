@@ -56,10 +56,10 @@ PIPELINE=$(curl -sf -X POST http://localhost:8000/api/pipeline/run \
     "source": "SEC_EDGAR"
   }' 2>/dev/null) || fail "Pipeline run failed"
 
-REJECTED=$(echo "$PIPELINE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('rejected', True))")
-TICKER=$(echo "$PIPELINE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('primary_ticker', '?'))")
-CONF=$(echo "$PIPELINE" | python3 -c "import sys,json; print(f\"{json.load(sys.stdin).get('confidence', 0)*100:.1f}%\")")
-[ "$REJECTED" = "False" ] && pass "Pipeline approved signal: $TICKER at $CONF confidence" || fail "Pipeline rejected signal"
+STATUS=$(echo "$PIPELINE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status', 'unknown'))")
+SIGNAL_ID=$(echo "$PIPELINE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('signal_id', ''))")
+REJECTION=$(echo "$PIPELINE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('rejection_reason') or '')")
+[ "$STATUS" = "completed" ] && [ -n "$SIGNAL_ID" ] && pass "Pipeline produced signal: $SIGNAL_ID" || fail "Pipeline failed (status=$STATUS, rejection=$REJECTION)"
 
 # 6. Verify signal persisted
 info "Verifying signal persisted..."
@@ -75,9 +75,15 @@ WS_OK=$(python3 -c "
 import asyncio, json, websockets
 async def test():
     async with websockets.connect('ws://localhost:8000/api/ws') as ws:
-        await ws.send(json.dumps({'type': 'ping'}))
-        pong = await asyncio.wait_for(ws.recv(), timeout=3)
-        return json.loads(pong)['type'] == 'pong'
+        # Server sends catch_up on connect — drain it first
+        first = await asyncio.wait_for(ws.recv(), timeout=3)
+        msg = json.loads(first)
+        if msg.get('type') == 'catch_up':
+            await ws.send(json.dumps({'type': 'ping'}))
+            pong = await asyncio.wait_for(ws.recv(), timeout=3)
+            return json.loads(pong)['type'] == 'pong'
+        # If no catch_up, first message might already be pong
+        return msg.get('type') == 'pong'
 print(asyncio.run(test()))
 " 2>/dev/null)
 [ "$WS_OK" = "True" ] && pass "WebSocket connected + ping/pong OK" || fail "WebSocket failed"
