@@ -70,21 +70,31 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
                 metadata={"ticker": primary_ticker},
             )
 
-            # Derive namespace from source so Pinecone queries the correct partition
-            source = state.get("source", "SEC_EDGAR")
-            ns_mapping = {
-                "SEC_EDGAR": "sec_edgar",
-                "GDELT": "gdelt",
-                "NEWSAPI": "newsapi",
-            }
-            namespace = ns_mapping.get(source, "sec_edgar")
+            # Search ALL namespaces for evidence — a NEWSAPI article about AMZN
+            # should find similar AMZN events in sec_edgar, gdelt, etc.
+            all_namespaces = ["sec_edgar", "gdelt", "newsapi"]
+            similar: list[dict] = []
+            seen_ids: set[str] = set()
 
-            similar = await retrieve_similar_events(
-                event=event,
-                top_k=5,
-                min_similarity=0.70,
-                namespace=namespace,
-            )
+            for ns in all_namespaces:
+                try:
+                    ns_results = await retrieve_similar_events(
+                        event=event,
+                        top_k=5,
+                        min_similarity=0.70,
+                        namespace=ns,
+                    )
+                    for r in ns_results:
+                        eid = r.get("event_id", "")
+                        if eid not in seen_ids:
+                            seen_ids.add(eid)
+                            similar.append(r)
+                except Exception:
+                    continue  # namespace may not exist yet
+
+            # Keep top 5 by similarity
+            similar.sort(key=lambda x: x.get("similarity_score", 0), reverse=True)
+            similar = similar[:5]
 
             if similar:
                 evidence_objs = await build_evidence(similar, max_items=5)
