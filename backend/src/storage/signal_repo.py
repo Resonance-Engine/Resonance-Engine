@@ -1,7 +1,7 @@
 """Signal repository — CRUD operations for the signals table."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -13,6 +13,14 @@ from src.storage.database import async_session
 from src.storage.models import SignalModel
 
 logger = logging.getLogger(__name__)
+
+# Mapping for impact_window string → timedelta (used for expiry checks)
+_WINDOW_DELTAS = {
+    "1h": timedelta(hours=1),
+    "4h": timedelta(hours=4),
+    "24h": timedelta(hours=24),
+    "1w": timedelta(weeks=1),
+}
 
 
 def _signal_to_row(signal: Signal) -> dict:
@@ -177,6 +185,54 @@ async def count_signals(
         return await _do_count(session)
     async with async_session() as sess:
         return await _do_count(sess)
+
+
+async def list_unlabeled_expired(
+    limit: int = 100,
+    session: AsyncSession | None = None,
+) -> list[Signal]:
+    """List signals whose impact_window has expired but actual_move is still NULL.
+
+    Filters in two passes for efficiency:
+      1. SQL: actual_move IS NULL AND timestamp <= now() - 1h (the shortest window)
+      2. Python: keep only signals where timestamp + impact_window <= now()
+
+    Args:
+        limit: Max signals to return (default 100).
+        session: Optional async session.
+
+    Returns:
+        Signals ready to be labeled with actual_move from market data.
+    """
+    now = datetime.now(timezone.utc)
+    earliest_possible = now - _WINDOW_DELTAS["1h"]
+
+    async def _do_list(sess: AsyncSession) -> list[Signal]:
+        stmt = (
+            select(SignalModel)
+            .where(SignalModel.actual_move.is_(None))
+            .where(SignalModel.timestamp <= earliest_possible)
+            .order_by(SignalModel.timestamp.asc())
+            .limit(limit * 4)  # over-fetch since some won't be expired yet by exact window
+        )
+        result = await sess.execute(stmt)
+        rows = result.scalars().all()
+
+        expired: list[Signal] = []
+        for row in rows:
+            delta = _WINDOW_DELTAS.get(row.impact_window)
+            if delta is None:
+                continue
+            if row.timestamp + delta <= now:
+                expired.append(_row_to_signal(row))
+            if len(expired) >= limit:
+                break
+        return expired
+
+    if session is not None:
+        return await _do_list(session)
+    async with async_session() as sess:
+        return await _do_list(sess)
 
 
 async def update_actual_move(

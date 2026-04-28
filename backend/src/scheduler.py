@@ -1,7 +1,9 @@
-"""Async scheduler — EDGAR, GDELT, and NewsAPI polling.
+"""Async scheduler — EDGAR, GDELT, NewsAPI polling + feedback loop.
 
 Runs inside the FastAPI process using asyncio tasks. Polls data sources
 on a schedule and feeds articles/filings through the LangGraph pipeline.
+Also runs a feedback loop that labels expired signals with actual market
+moves for downstream evaluation/calibration.
 
 Schedule (US Eastern, Mon–Fri market hours):
   EDGAR:
@@ -11,6 +13,8 @@ Schedule (US Eastern, Mon–Fri market hours):
   News:
   - GDELT: every 15 minutes (free, no key)
   - NewsAPI: every 30 minutes (100 req/day quota-tracked)
+  Feedback:
+  - Label expired signals: every 30 minutes (Alpha Vantage 25 req/day quota)
 """
 
 import asyncio
@@ -35,6 +39,10 @@ NEWS_SCHEDULE = [
     ("GDELT", 900),      # every 15 min
     ("NEWSAPI", 1800),   # every 30 min
 ]
+
+# Feedback loop interval (seconds) — labels expired signals with actual_move
+FEEDBACK_INTERVAL = 1800  # every 30 min
+FEEDBACK_BATCH = 50       # max signals labeled per run
 
 # Track running tasks so we can cancel on shutdown
 _tasks: list[asyncio.Task] = []
@@ -290,6 +298,35 @@ async def _news_loop(source: str, interval: int) -> None:
     logger.info("Scheduler: %s loop stopped", source)
 
 
+async def _feedback_loop(interval: int, batch_size: int) -> None:
+    """Run the feedback loop — label expired signals with actual market moves."""
+    from src.ingestion.feedback_loop import label_expired_signals
+
+    logger.info("Scheduler: started feedback loop (every %ds)", interval)
+
+    while _running:
+        try:
+            if _is_market_hours():
+                stats = await label_expired_signals(batch_size=batch_size)
+                if stats["scanned"] > 0:
+                    logger.info(
+                        "Scheduler [feedback]: scanned=%d labeled=%d no_data=%d errors=%d",
+                        stats["scanned"], stats["labeled"],
+                        stats["no_data"], stats["errors"],
+                    )
+            else:
+                logger.debug("Scheduler [feedback]: outside market hours")
+        except Exception:
+            logger.exception("Scheduler [feedback] loop error")
+
+        for _ in range(interval):
+            if not _running:
+                break
+            await asyncio.sleep(1)
+
+    logger.info("Scheduler: feedback loop stopped")
+
+
 # ── Start / Stop ──────────────────────────────────────────────
 
 async def start_scheduler() -> None:
@@ -317,8 +354,15 @@ async def start_scheduler() -> None:
         )
         _tasks.append(task)
 
+    # Feedback loop — labels expired signals with actual market moves
+    feedback_task = asyncio.create_task(
+        _feedback_loop(FEEDBACK_INTERVAL, FEEDBACK_BATCH),
+        name="scheduler-feedback",
+    )
+    _tasks.append(feedback_task)
+
     logger.info(
-        "Scheduler: %d loops started (EDGAR: %d, News: %d)",
+        "Scheduler: %d loops started (EDGAR: %d, News: %d, Feedback: 1)",
         len(_tasks), len(EDGAR_SCHEDULE), len(NEWS_SCHEDULE),
     )
 
