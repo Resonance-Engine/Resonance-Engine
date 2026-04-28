@@ -1,11 +1,17 @@
 """Text embedding — converts event summaries to vector representations.
 
-Supports two backends:
-  1. Google Gemini text-embedding-004 (768 dimensions) — preferred
-  2. OpenAI text-embedding-3-small (1536 dimensions) — fallback
+Supports two backends, both at 3072 dimensions to match the Pinecone index:
+  1. OpenAI text-embedding-3-large (3072 dimensions) — preferred
+  2. Google Gemini gemini-embedding-001 (3072 dimensions) — fallback
 
-Set GEMINI_API_KEY to use Gemini, or OPENAI_API_KEY for OpenAI.
-Lazy-loaded client to avoid import-time API key validation.
+Backend priority is determined by EMBEDDING_BACKEND env var, then by
+which API key is set. Set OPENAI_API_KEY to use OpenAI, GEMINI_API_KEY
+for Gemini. Lazy-loaded client to avoid import-time API key validation.
+
+Note: the two backends produce vectors in different embedding spaces.
+Cross-backend retrieval works (same dim) but quality is lower than
+within-backend retrieval. Existing vectors stay queryable through a
+backend swap; new vectors will accumulate in the new space.
 """
 
 import logging
@@ -15,13 +21,14 @@ from src.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Gemini embedding config
-GEMINI_MODEL = "models/gemini-embedding-001"
-GEMINI_DIMENSIONS = 3072
+# Common dimension — both backends use 3072 to match the Pinecone index
+EMBEDDING_DIMENSIONS = 3072
 
-# OpenAI embedding config (fallback)
-OPENAI_MODEL = "text-embedding-3-small"
-OPENAI_DIMENSIONS = 1536
+# OpenAI embedding config (preferred)
+OPENAI_MODEL = "text-embedding-3-large"
+
+# Gemini embedding config (fallback)
+GEMINI_MODEL = "models/gemini-embedding-001"
 
 MAX_BATCH_SIZE = 100
 MAX_TEXT_LENGTH = 8000
@@ -31,20 +38,27 @@ _backend: str = ""
 
 
 def _get_backend() -> str:
-    """Determine which embedding backend to use."""
-    if settings.gemini_api_key:
-        return "gemini"
+    """Determine which embedding backend to use.
+
+    Priority: explicit EMBEDDING_BACKEND override → OpenAI key → Gemini key.
+    """
+    override = (settings.embedding_backend or "").lower().strip()
+    if override in {"openai", "gemini"}:
+        if override == "openai" and settings.openai_api_key:
+            return "openai"
+        if override == "gemini" and settings.gemini_api_key:
+            return "gemini"
+
     if settings.openai_api_key:
         return "openai"
+    if settings.gemini_api_key:
+        return "gemini"
     return "none"
 
 
 def get_dimensions() -> int:
     """Return the embedding dimensions for the active backend."""
-    backend = _get_backend()
-    if backend == "gemini":
-        return GEMINI_DIMENSIONS
-    return OPENAI_DIMENSIONS
+    return EMBEDDING_DIMENSIONS
 
 
 def _get_client():
@@ -73,7 +87,7 @@ async def embed_text(text: str) -> list[float]:
         text: Text to embed (truncated to MAX_TEXT_LENGTH chars).
 
     Returns:
-        Vector of floats (768 for Gemini, 1536 for OpenAI).
+        Vector of floats (3072-dim, matches the Pinecone index).
     """
     text = text[:MAX_TEXT_LENGTH].strip()
     if not text:
@@ -81,19 +95,19 @@ async def embed_text(text: str) -> list[float]:
 
     client = _get_client()
 
-    if _backend == "gemini":
+    if _backend == "openai":
+        response = await client.embeddings.create(
+            input=[text],
+            model=OPENAI_MODEL,
+            dimensions=EMBEDDING_DIMENSIONS,
+        )
+        return response.data[0].embedding
+    else:
         response = client.models.embed_content(
             model=GEMINI_MODEL,
             contents=text,
         )
         return response.embeddings[0].values
-    else:
-        response = await client.embeddings.create(
-            input=[text],
-            model=OPENAI_MODEL,
-            dimensions=OPENAI_DIMENSIONS,
-        )
-        return response.data[0].embedding
 
 
 async def embed_batch(texts: list[str]) -> list[list[float]]:
@@ -114,20 +128,20 @@ async def embed_batch(texts: list[str]) -> list[list[float]]:
     for i in range(0, len(texts), MAX_BATCH_SIZE):
         batch = [t[:MAX_TEXT_LENGTH].strip() or " " for t in texts[i:i + MAX_BATCH_SIZE]]
 
-        if _backend == "gemini":
+        if _backend == "openai":
+            response = await client.embeddings.create(
+                input=batch,
+                model=OPENAI_MODEL,
+                dimensions=EMBEDDING_DIMENSIONS,
+            )
+            sorted_data = sorted(response.data, key=lambda x: x.index)
+            all_embeddings.extend(d.embedding for d in sorted_data)
+        else:
             response = client.models.embed_content(
                 model=GEMINI_MODEL,
                 contents=batch,
             )
             all_embeddings.extend(e.values for e in response.embeddings)
-        else:
-            response = await client.embeddings.create(
-                input=batch,
-                model=OPENAI_MODEL,
-                dimensions=OPENAI_DIMENSIONS,
-            )
-            sorted_data = sorted(response.data, key=lambda x: x.index)
-            all_embeddings.extend(d.embedding for d in sorted_data)
 
     return all_embeddings
 
