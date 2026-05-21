@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import NoiseOverlay from '../components/NoiseOverlay'
 import GlassPanel from '../components/GlassPanel'
+import { getSignal } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
-const INITIAL_CATALYSTS = [
+const FALLBACK_CATALYSTS = [
   { id: 1, time: '14:02:11', source: 'REUTERS', headline: 'Central bank hints at liquidity injection for Q4.' },
   { id: 2, time: '13:58:45', source: 'ON-CHAIN', headline: 'Whale accumulation detected in prime brokerage wallets.' },
   { id: 3, time: '13:45:20', source: 'SENTIMENT', headline: 'Retail fear levels hit 12-month highs, prime for reversal.' },
@@ -12,9 +13,14 @@ const INITIAL_CATALYSTS = [
 ]
 
 export default function SignalResolution() {
+  const [searchParams] = useSearchParams()
+  const signalId = searchParams.get('id')
   const { user, logout } = useAuth()
+
   const [currentTime, setCurrentTime] = useState('')
-  const [catalysts] = useState(INITIAL_CATALYSTS)
+  const [signal, setSignal] = useState(null)
+  const [catalysts, setCatalysts] = useState(FALLBACK_CATALYSTS)
+  const [loading, setLoading] = useState(!!signalId)
 
   // Stable particle positions — computed once
   const inputParticles = useMemo(() =>
@@ -35,6 +41,43 @@ export default function SignalResolution() {
     })), []
   )
 
+  // Fetch signal from API
+  useEffect(() => {
+    if (!signalId) return
+    let cancelled = false
+    async function fetchData() {
+      try {
+        const data = await getSignal(signalId)
+        if (cancelled) return
+        setSignal(data)
+        // Map evidence to catalysts
+        if (data.evidence && data.evidence.length > 0) {
+          setCatalysts(data.evidence.map((ev, i) => ({
+            id: i + 1,
+            time: ev.time_delta || '',
+            source: ev.ticker || 'EVIDENCE',
+            headline: ev.event_summary || ev.outcome || '',
+          })))
+        }
+        // Map citations to catalysts if no evidence
+        if ((!data.evidence || data.evidence.length === 0) && data.citations && data.citations.length > 0) {
+          setCatalysts(data.citations.map((c, i) => ({
+            id: i + 1,
+            time: '',
+            source: c.type?.toUpperCase() || 'SOURCE',
+            headline: c.description || '',
+          })))
+        }
+      } catch {
+        // Signal not found or backend down — use fallback
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [signalId])
+
   useEffect(() => {
     const tick = () => {
       const now = new Date()
@@ -46,6 +89,42 @@ export default function SignalResolution() {
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [])
+
+  // Display values — from API signal or fallbacks
+  const displayId = signal ? signal.signal_id?.substring(0, 8).toUpperCase() : 'NV-992'
+  const displayConfidence = signal ? `${(signal.confidence * 100).toFixed(1)}%` : '98.4%'
+  const displayImpactWindow = signal?.impact_window || '24h'
+  const displayPredictedMove = signal?.predicted_move
+    ? `${signal.predicted_move > 0 ? '+' : ''}${(signal.predicted_move * 100).toFixed(1)}%`
+    : null
+  const signalTypeMap = {
+    positive_drift: 'LONG / OVERWEIGHT',
+    negative_drift: 'SHORT / UNDERWEIGHT',
+    volatility_spike: 'HEDGE / REDUCE',
+    volume_surge: 'LONG / OVERWEIGHT',
+    watch: 'MONITOR',
+  }
+  const displayRecommendation = signal
+    ? (signalTypeMap[signal.signal_type] || 'MONITOR')
+    : 'LONG / OVERWEIGHT'
+  const displayVerdict = signal?.rationale || 'Pattern matches historical Q3 squeeze dynamics. Resonance suggests a liquidity gap at $42.5k.'
+  const displayUncertainty = signal?.uncertainty || null
+  const displayVolatility = signal?.confidence
+    ? (signal.confidence > 0.8 ? 'HIGH' : signal.confidence > 0.6 ? 'MEDIUM' : 'LOW')
+    : 'HIGH'
+  const displayEntropy = signal?.confidence ? signal.confidence.toFixed(2) : '0.88'
+
+  if (loading) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center">
+        <NoiseOverlay />
+        <div className="text-center space-y-4">
+          <div className="text-2xl font-light tracking-[0.5em] text-white animate-pulse">LOADING SIGNAL</div>
+          <div className="text-[10px] text-gray-500 uppercase tracking-widest">Retrieving from signal store...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -83,6 +162,10 @@ export default function SignalResolution() {
             </button>
           </nav>
           <div className="text-right">
+            <div className="hidden md:block">
+              <div className="label-mini">Ticker</div>
+              <div className="text-[10px] font-mono uppercase">{signal?.ticker || 'N/A'}</div>
+            </div>
             <div className="label-mini">System Time</div>
             <div className="text-[10px] font-mono">{currentTime}</div>
           </div>
@@ -98,12 +181,19 @@ export default function SignalResolution() {
             <div>
               <span className="label-mini">Signal Identification</span>
               <h2 className="text-4xl font-black tracking-tighter uppercase mt-1">
-                NV-992: <span className="text-red-600">Aggressive Accumulation</span>
+                {signal ? (
+                  <>{displayId}: <span className="text-red-600">{signal.signal_type?.replace(/_/g, ' ')}</span></>
+                ) : (
+                  <>NV-992: <span className="text-red-600">Aggressive Accumulation</span></>
+                )}
               </h2>
             </div>
             <div className="text-right">
               <span className="label-mini">Confidence Score</span>
-              <div className="text-3xl font-light tracking-widest text-white">98.4%</div>
+              <div className="text-3xl font-light tracking-widest text-white">{displayConfidence}</div>
+              {displayPredictedMove && (
+                <div className="text-sm monospaced text-red-500 mt-1">Predicted: {displayPredictedMove}</div>
+              )}
             </div>
           </div>
 
@@ -122,7 +212,7 @@ export default function SignalResolution() {
 
             {/* Particle Flow */}
             <div className="relative h-full w-full overflow-hidden">
-              {/* Input particles (left → prism) */}
+              {/* Input particles (left -> prism) */}
               {inputParticles.map(p => (
                 <div
                   key={p.id}
@@ -145,7 +235,7 @@ export default function SignalResolution() {
                 </div>
               </div>
 
-              {/* Output particles (prism → right) */}
+              {/* Output particles (prism -> right) */}
               {outputParticles.map(p => (
                 <div
                   key={p.id}
@@ -174,7 +264,7 @@ export default function SignalResolution() {
             {/* Right: Recommendation */}
             <div className="absolute right-10 top-1/2 -translate-y-1/2 text-right z-10">
               <div className="text-red-600 text-xs font-bold tracking-[0.3em] uppercase mb-1">Recommendation</div>
-              <div className="text-2xl font-black tracking-tighter">LONG / OVERWEIGHT</div>
+              <div className="text-2xl font-black tracking-tighter">{displayRecommendation}</div>
             </div>
           </GlassPanel>
         </section>
@@ -220,7 +310,7 @@ export default function SignalResolution() {
 
           {/* Catalysts Panel */}
           <GlassPanel className="col-span-12 lg:col-span-4 p-6">
-            <h3 className="label-mini mb-6">Extraction Catalysts</h3>
+            <h3 className="label-mini mb-6">{signal ? 'Evidence & Citations' : 'Extraction Catalysts'}</h3>
             <div className="space-y-6">
               {catalysts.map(item => (
                 <div key={item.id} className="group cursor-pointer">
@@ -244,15 +334,15 @@ export default function SignalResolution() {
           <GlassPanel className="col-span-12 md:col-span-4 p-6 flex flex-col justify-between">
             <div>
               <span className="label-mini">Volatility Vector</span>
-              <div className="text-3xl font-black mt-2 text-red-600">HIGH</div>
+              <div className="text-3xl font-black mt-2 text-red-600">{displayVolatility}</div>
             </div>
             <div className="mt-8">
               <div className="flex justify-between text-[10px] mb-2">
                 <span className="uppercase tracking-widest text-white/40">Entropy Scale</span>
-                <span>0.88</span>
+                <span>{displayEntropy}</span>
               </div>
               <div className="h-1 w-full bg-white/5">
-                <div className="h-full bg-red-600 shadow-[0_0_10px_#ff3333]" style={{ width: '88%' }} />
+                <div className="h-full bg-red-600 shadow-[0_0_10px_#ff3333]" style={{ width: `${parseFloat(displayEntropy) * 100}%` }} />
               </div>
             </div>
           </GlassPanel>
@@ -260,11 +350,11 @@ export default function SignalResolution() {
           {/* Execution Window */}
           <GlassPanel className="col-span-12 md:col-span-4 p-6 flex flex-col justify-between">
             <div>
-              <span className="label-mini">Execution Window</span>
-              <div className="text-3xl font-black mt-2">14:00m</div>
+              <span className="label-mini">Impact Window</span>
+              <div className="text-3xl font-black mt-2">{displayImpactWindow}</div>
             </div>
             <p className="text-[10px] text-white/40 uppercase tracking-widest leading-loose mt-4">
-              Signal decay accelerates post-threshold. Immediate allocation advised.
+              {signal ? 'Signal decay accelerates post-window. Monitor for confirmation.' : 'Signal decay accelerates post-threshold. Immediate allocation advised.'}
             </p>
           </GlassPanel>
 
@@ -272,11 +362,18 @@ export default function SignalResolution() {
           <GlassPanel className="col-span-12 md:col-span-4 p-6 bg-red-600/5 border-red-600/30">
             <span className="label-mini text-red-500">Engine Verdict</span>
             <p className="text-sm font-medium mt-4 leading-relaxed">
-              "Pattern matches historical Q3 squeeze dynamics. Resonance suggests a liquidity gap at $42.5k."
+              "{displayVerdict}"
             </p>
+            {displayUncertainty && (
+              <p className="text-[10px] text-gray-500 mt-3 leading-relaxed italic">
+                Uncertainty: {displayUncertainty}
+              </p>
+            )}
             <div className="mt-6 flex gap-2">
               <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-              <span className="text-[9px] uppercase tracking-widest">Active Processing</span>
+              <span className="text-[9px] uppercase tracking-widest">
+                {signal ? 'Signal Resolved' : 'Active Processing'}
+              </span>
             </div>
           </GlassPanel>
         </div>
@@ -289,7 +386,7 @@ export default function SignalResolution() {
           Current Load: 44.2 Teraflops.
         </div>
         <div className="flex gap-8 items-center">
-          <div className="text-[9px] uppercase tracking-[0.4em]">Resonance Engine &copy; 2024</div>
+          <div className="text-[9px] uppercase tracking-[0.4em]">Resonance Engine &copy; 2026</div>
           <div className="h-12 w-px bg-white/10" />
           <div className="flex flex-col items-end">
             <div className="text-[9px] uppercase tracking-[0.4em] mb-1">Sync Status</div>

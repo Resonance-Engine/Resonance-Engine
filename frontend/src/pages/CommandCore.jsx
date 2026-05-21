@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import NoiseOverlay from '../components/NoiseOverlay'
 import GlassPanel from '../components/GlassPanel'
+import { listSignals, connectSignalWS } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
-const INITIAL_SIGNALS = [
-  { id: 1, time: '14:22:01', headline: 'FED CHAIR INDICATES RATE PAUSE UNTIL Q4', asset: 'DXY', strength: 92, impact: 'HIGH VOLATILITY' },
-  { id: 2, time: '14:21:44', headline: 'TSMC REPORTS RECORD CHIP DEMAND IN AI SECTOR', asset: 'NVDA', strength: 84, impact: 'BULLISH BIAS' },
-  { id: 3, time: '14:20:12', headline: 'OIL PIPELINE DISRUPTION IN NORTH SEA REGION', asset: 'BRENT', strength: 67, impact: 'SUPPLY SQUEEZE' },
-  { id: 4, time: '14:18:55', headline: 'EU REGULATORS APPROVE NEW FINTECH FRAMEWORK', asset: 'EUR', strength: 45, impact: 'NEUTRAL' },
+const FALLBACK_SIGNALS = [
+  { id: 1, time: '14:22:01', headline: 'FED CHAIR INDICATES RATE PAUSE UNTIL Q4', asset: 'DXY', strength: 92, impact: 'HIGH VOLATILITY', signal_id: null },
+  { id: 2, time: '14:21:44', headline: 'TSMC REPORTS RECORD CHIP DEMAND IN AI SECTOR', asset: 'NVDA', strength: 84, impact: 'BULLISH BIAS', signal_id: null },
+  { id: 3, time: '14:20:12', headline: 'OIL PIPELINE DISRUPTION IN NORTH SEA REGION', asset: 'BRENT', strength: 67, impact: 'SUPPLY SQUEEZE', signal_id: null },
+  { id: 4, time: '14:18:55', headline: 'EU REGULATORS APPROVE NEW FINTECH FRAMEWORK', asset: 'EUR', strength: 45, impact: 'NEUTRAL', signal_id: null },
 ]
 
 const INITIAL_LOGS = [
@@ -18,13 +19,27 @@ const INITIAL_LOGS = [
   { id: 4, time: '[14:22:25]', msg: 'Executing predictive logic branch α.' },
 ]
 
-const ASSETS = ['BTC', 'GOLD', 'AAPL', 'TSLA']
-const HEADLINES = [
-  'Market liquidity depth decreasing',
-  'Neural net identifies pattern 7G',
-  'Volume spike detected in retail flow',
-  'Cross-asset correlation rising',
-]
+function mapSignalToFeed(signal) {
+  const ts = new Date(signal.timestamp)
+  const time = ts.toLocaleTimeString('en-US', { hour12: false })
+  const strength = Math.round(signal.confidence * 100)
+  const impactMap = {
+    volatility_spike: 'HIGH VOLATILITY',
+    positive_drift: 'BULLISH BIAS',
+    negative_drift: 'BEARISH BIAS',
+    volume_surge: 'VOLUME SURGE',
+    watch: 'WATCH',
+  }
+  return {
+    id: signal.signal_id,
+    signal_id: signal.signal_id,
+    time,
+    headline: signal.signal_text?.substring(0, 80).toUpperCase() || signal.rationale?.substring(0, 80).toUpperCase() || 'SIGNAL DETECTED',
+    asset: signal.ticker,
+    strength,
+    impact: impactMap[signal.signal_type] || signal.signal_type?.toUpperCase() || 'LIVE',
+  }
+}
 
 function TickerBlock() {
   return (
@@ -46,14 +61,84 @@ function TickerBlock() {
 }
 
 export default function CommandCore() {
+  const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [volatility, setVolatility] = useState(64)
   const [sessionTime, setSessionTime] = useState('00:00:00')
-  const [signals, setSignals] = useState(INITIAL_SIGNALS)
+  const [signals, setSignals] = useState(FALLBACK_SIGNALS)
   const [logs, setLogs] = useState(INITIAL_LOGS)
   const [chartData, setChartData] = useState([40, 55, 45, 60, 80, 75, 90, 85, 70, 65, 80, 95, 85, 70, 60])
-  const pnl = '12,440.00'
+  const [signalCount, setSignalCount] = useState(0)
+  const [apiConnected, setApiConnected] = useState(false)
+  const [wsConnected, setWsConnected] = useState(false)
   const startTimeRef = useRef(Date.now())
+
+  // Helper: add a log entry
+  const addLog = useCallback((msg) => {
+    setLogs(prev => [{
+      id: Date.now(),
+      time: `[${new Date().toLocaleTimeString('en-US', { hour12: false })}]`,
+      msg,
+    }, ...prev].slice(0, 8))
+  }, [])
+
+  // Initial REST fetch to load existing signals + signal count
+  const fetchSignals = useCallback(async () => {
+    try {
+      const data = await listSignals({ limit: 10 })
+      if (data.items && data.items.length > 0) {
+        setSignals(data.items.map(mapSignalToFeed))
+        setSignalCount(data.total)
+        setApiConnected(true)
+      }
+    } catch {
+      setApiConnected(false)
+    }
+  }, [])
+
+  // WebSocket for real-time push, REST poll as fallback
+  useEffect(() => {
+    // Initial load via REST
+    fetchSignals()
+
+    // Connect WebSocket
+    const handle = connectSignalWS({
+      onSignal: (data) => {
+        setSignals(prev => [mapSignalToFeed(data), ...prev].slice(0, 10))
+        setSignalCount(prev => prev + 1)
+        addLog(`Live signal: ${data.ticker} (${Math.round(data.confidence * 100)}%)`)
+      },
+      onCatchUp: (items) => {
+        if (items.length > 0) {
+          const mapped = items.map(mapSignalToFeed).reverse()
+          setSignals(prev => {
+            const existingIds = new Set(prev.map(s => s.id))
+            const newOnes = mapped.filter(s => !existingIds.has(s.id))
+            return [...newOnes, ...prev].slice(0, 10)
+          })
+          addLog(`Synced ${items.length} buffered signals via WebSocket.`)
+        }
+      },
+      onOpen: () => {
+        setWsConnected(true)
+        setApiConnected(true)
+        addLog('WebSocket connected — real-time mode active.')
+      },
+      onClose: () => {
+        setWsConnected(false)
+      },
+    })
+
+    // Fallback: poll REST every 10s only when WS is disconnected
+    const pollId = setInterval(() => {
+      if (!wsConnected) fetchSignals()
+    }, 10000)
+
+    return () => {
+      handle.close()
+      clearInterval(pollId)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -71,30 +156,23 @@ export default function CommandCore() {
 
       // Chart bars
       setChartData(prev => prev.map(() => Math.floor(Math.random() * 100)))
-
-      // Random signal injection
-      if (Math.random() > 0.95) {
-        const newSignal = {
-          id: Date.now(),
-          time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-          headline: HEADLINES[Math.floor(Math.random() * HEADLINES.length)],
-          asset: ASSETS[Math.floor(Math.random() * ASSETS.length)],
-          strength: Math.floor(Math.random() * 40) + 60,
-          impact: 'LIVE UPDATE',
-        }
-        setSignals(prev => [newSignal, ...prev].slice(0, 10))
-
-        const newLog = {
-          id: Date.now(),
-          time: `[${new Date().toLocaleTimeString('en-US', { hour12: false })}]`,
-          msg: 'Signal cluster synchronized.',
-        }
-        setLogs(prev => [newLog, ...prev].slice(0, 8))
-      }
     }, 1000)
 
     return () => clearInterval(id)
   }, [])
+
+  const handleSignalClick = (signal) => {
+    if (signal.signal_id) {
+      navigate(`/signal?id=${signal.signal_id}`)
+    } else {
+      navigate('/signal')
+    }
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <div className="relative h-screen flex flex-col p-6 gap-6 overflow-hidden">
@@ -119,16 +197,24 @@ export default function CommandCore() {
 
           <div className="hidden lg:flex gap-8 border-l border-white/10 pl-8 items-center">
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-widest text-gray-600">Sync Status</div>
+              <div className="text-[9px] uppercase tracking-widest text-gray-600">API Status</div>
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
-                <div className="text-[11px] monospaced uppercase tracking-wider">Neural Link Active</div>
+                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${wsConnected ? 'bg-green-500' : apiConnected ? 'bg-yellow-500' : 'bg-red-600'}`} />
+                <div className="text-[11px] monospaced uppercase tracking-wider">
+                  {wsConnected ? 'Real-Time WS' : apiConnected ? 'REST Polling' : 'Fallback Mode'}
+                </div>
               </div>
             </div>
             <div className="space-y-1">
               <div className="text-[9px] uppercase tracking-widest text-gray-600">Global Volatility</div>
               <div className="text-[11px] monospaced uppercase tracking-wider text-red-500">{volatility}%</div>
             </div>
+            {apiConnected && (
+              <div className="space-y-1">
+                <div className="text-[9px] uppercase tracking-widest text-gray-600">Total Signals</div>
+                <div className="text-[11px] monospaced uppercase tracking-wider text-red-500">{signalCount}</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -147,7 +233,7 @@ export default function CommandCore() {
             )}
             <span className="text-gray-800">|</span>
             <button
-              onClick={() => { logout(); }}
+              onClick={handleLogout}
               className="text-[9px] uppercase tracking-[0.3em] text-gray-600 hover:text-red-500 transition-colors"
             >
               Logout
@@ -167,7 +253,9 @@ export default function CommandCore() {
         <aside className="col-span-12 lg:col-span-3 flex flex-col gap-4 overflow-hidden">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-[10px] uppercase tracking-[0.5em] text-gray-400">Intelligence Feed</h3>
-            <div className="text-[9px] text-red-500 font-bold px-2 py-0.5 border border-red-500/30">LIVE</div>
+            <div className={`text-[9px] font-bold px-2 py-0.5 border ${wsConnected ? 'text-green-500 border-green-500/30' : apiConnected ? 'text-yellow-500 border-yellow-500/30' : 'text-red-500 border-red-500/30'}`}>
+              {wsConnected ? 'LIVE' : apiConnected ? 'POLLING' : 'DEMO'}
+            </div>
           </div>
 
           <GlassPanel className="flex-grow overflow-y-auto p-4 space-y-4">
@@ -175,12 +263,13 @@ export default function CommandCore() {
             {signals.map(signal => (
               <div
                 key={signal.id}
+                onClick={() => handleSignalClick(signal)}
                 className="group relative p-3 border border-white/5 hover:border-red-500/40 transition-all duration-300 cursor-pointer bg-white/[0.02]"
               >
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-[10px] monospaced text-gray-500">{signal.time}</span>
                   <span className={`text-[9px] uppercase font-bold tracking-widest ${signal.strength > 80 ? 'text-red-500' : 'text-gray-400'}`}>
-                    {signal.strength}% STRENGTH
+                    {signal.strength}% CONFIDENCE
                   </span>
                 </div>
                 <div className="text-xs font-bold leading-relaxed mb-1">{signal.headline}</div>
@@ -282,7 +371,7 @@ export default function CommandCore() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <div className="text-[9px] text-gray-600 uppercase">Real-time PnL</div>
-                <div className="text-xl monospaced font-bold text-green-500">+${pnl}</div>
+                <div className="text-xl monospaced font-bold text-green-500">+$12,440.00</div>
               </div>
               <div className="space-y-1">
                 <div className="text-[9px] text-gray-600 uppercase">Active Risk</div>

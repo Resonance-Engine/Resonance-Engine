@@ -35,10 +35,17 @@ def test_duplicate_hash_blocked():
 
 
 def test_new_hash_passes():
-    """New content hash should pass through."""
-    event = _make_event(content_hash="new_hash")
-    recent = [_make_event(content_hash="old_hash")]
+    """New content hash with different event type should pass through."""
+    event = _make_event(content_hash="new_hash", event_type="fda_approval")
+    recent = [_make_event(content_hash="old_hash", event_type="earnings")]
     assert is_meaningful_change(event, recent) is True
+
+
+def test_new_hash_same_cluster_blocked():
+    """New content hash but same story cluster should still be filtered."""
+    event = _make_event(content_hash="new_hash", ticker="AAPL", event_type="earnings")
+    recent = [_make_event(content_hash="old_hash", ticker="AAPL", event_type="earnings")]
+    assert is_meaningful_change(event, recent) is False
 
 
 def test_same_story_different_source_blocked():
