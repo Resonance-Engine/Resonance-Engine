@@ -121,3 +121,48 @@ class TestResolveEntities:
     def test_empty_text(self):
         entities = resolve_entities("")
         assert entities == []
+
+
+class TestWellKnownWordBoundary:
+    """Regression: naive substring matching produced systematic false
+    positives — "metal supply" → META, "targeted cost reductions" → TGT,
+    "visation" → V, "intelligence" → INTC."""
+
+    EXTENDED_TICKERS = {
+        **MOCK_TICKERS,
+        "6": {"cik_str": "1326801", "ticker": "META", "title": "Meta Platforms Inc."},
+        "7": {"cik_str": "27419", "ticker": "TGT", "title": "Target Corp"},
+        "8": {"cik_str": "50863", "ticker": "INTC", "title": "Intel Corp"},
+        "9": {"cik_str": "1403161", "ticker": "V", "title": "Visa Inc."},
+    }
+
+    @pytest.fixture(autouse=True)
+    def _load_extended(self):
+        load_company_lookup(data=self.EXTENDED_TICKERS)
+
+    def test_substring_inside_word_does_not_match(self):
+        text = (
+            "The company announced targeted cost reductions and secured "
+            "metal supply agreements, improving its intelligence division."
+        )
+        tickers = {e.ticker for e in resolve_entities(text)}
+        assert "TGT" not in tickers
+        assert "META" not in tickers
+        assert "INTC" not in tickers
+
+    def test_lowercase_common_word_does_not_match(self):
+        text = "The retailer set a target for improvised visa processing."
+        tickers = {e.ticker for e in resolve_entities(text)}
+        assert "TGT" not in tickers
+        assert "V" not in tickers
+
+    def test_exact_name_still_matches(self):
+        text = "Meta reported strong ad revenue while Target raised guidance."
+        tickers = {e.ticker for e in resolve_entities(text)}
+        assert "META" in tickers
+        assert "TGT" in tickers
+
+    def test_name_at_word_boundary_with_punctuation(self):
+        text = "Shares of Intel, Visa, and Meta rallied."
+        tickers = {e.ticker for e in resolve_entities(text)}
+        assert {"INTC", "V", "META"} <= tickers

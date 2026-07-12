@@ -62,7 +62,9 @@ async def run_pipeline(
 
     except Exception as e:
         logger.exception("Pipeline execution failed")
-        raise HTTPException(status_code=500, detail=f"Pipeline error: {e}") from e
+        # Detail stays server-side (logged above) — echoing str(e) to the
+        # client leaks internals (paths, model names, DB errors).
+        raise HTTPException(status_code=500, detail="Pipeline execution failed") from e
 
 
 @router.get("/scheduler/status")

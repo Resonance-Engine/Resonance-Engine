@@ -7,6 +7,7 @@ The model is loaded lazily on first call and cached for subsequent calls.
 """
 
 import logging
+import threading
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,9 @@ MAX_LENGTH = 512
 
 # Lazy-loaded model and tokenizer
 _pipeline = None
+# Guards the lazy load: two concurrent first calls must not both
+# instantiate the ~400MB model (memory spike / potential OOM).
+_load_lock = threading.Lock()
 
 
 @dataclass
@@ -30,32 +34,40 @@ class SentimentResult:
 
 
 def _get_pipeline():
-    """Lazy-load the FinBERT pipeline. Cached after first call."""
+    """Lazy-load the FinBERT pipeline. Cached after first call.
+
+    Double-checked locking: the fast path avoids the lock once loaded;
+    the slow path serializes concurrent first loads.
+    """
     global _pipeline
     if _pipeline is not None:
         return _pipeline
 
-    try:
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
-    except ImportError:
-        raise ImportError(
-            "transformers and torch are required for FinBERT. "
-            "Install with: pip install transformers torch"
-        )
+    with _load_lock:
+        if _pipeline is not None:  # another thread finished the load
+            return _pipeline
 
-    logger.info("Loading FinBERT model: %s", MODEL_NAME)
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
-    _pipeline = pipeline(
-        "sentiment-analysis",
-        model=model,
-        tokenizer=tokenizer,
-        return_all_scores=True,
-        truncation=True,
-        max_length=MAX_LENGTH,
-    )
-    logger.info("FinBERT model loaded successfully")
-    return _pipeline
+        try:
+            from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
+        except ImportError:
+            raise ImportError(
+                "transformers and torch are required for FinBERT. "
+                "Install with: pip install transformers torch"
+            )
+
+        logger.info("Loading FinBERT model: %s", MODEL_NAME)
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+        _pipeline = pipeline(
+            "sentiment-analysis",
+            model=model,
+            tokenizer=tokenizer,
+            top_k=None,  # replaces deprecated return_all_scores=True
+            truncation=True,
+            max_length=MAX_LENGTH,
+        )
+        logger.info("FinBERT model loaded successfully")
+        return _pipeline
 
 
 def classify_sentiment(text: str) -> SentimentResult:
@@ -71,8 +83,9 @@ def classify_sentiment(text: str) -> SentimentResult:
     pipe = _get_pipeline()
     results = pipe(text[:2000])  # Pre-truncate to avoid tokenizer overhead
 
-    # results is [[{label, score}, ...]] — extract scores
-    scores_list = results[0]
+    # Normalize: [[{label, score}, ...]] (older transformers) vs
+    # [{label, score}, ...] (top_k=None on newer versions)
+    scores_list = results[0] if isinstance(results[0], list) else results
     scores = {item["label"]: item["score"] for item in scores_list}
 
     positive = scores.get("positive", 0.0)
@@ -89,6 +102,25 @@ def classify_sentiment(text: str) -> SentimentResult:
         negative=negative,
         neutral=neutral,
     )
+
+
+async def classify_sentiment_async(text: str) -> SentimentResult:
+    """Async wrapper for classify_sentiment.
+
+    FinBERT forward passes are CPU-heavy (hundreds of ms) — calling the
+    sync version inside an async agent blocks the event loop, stalling
+    every concurrent pipeline and WebSocket heartbeat. This runs the
+    inference in a worker thread instead.
+
+    Args:
+        text: Financial text (news headline, filing excerpt, etc.).
+
+    Returns:
+        SentimentResult with label, confidence, and per-class scores.
+    """
+    import asyncio
+
+    return await asyncio.to_thread(classify_sentiment, text)
 
 
 def classify_batch(texts: list[str], batch_size: int = 16) -> list[SentimentResult]:

@@ -1,6 +1,6 @@
 """Signal schema — a testable, actionable statement derived from an event."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -43,4 +43,4 @@ class Signal(BaseModel):
     evidence: list[EvidenceItem] = Field(default_factory=list)
     citations: list[Citation] = Field(default_factory=list)
     metadata: dict = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

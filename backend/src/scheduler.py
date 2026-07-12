@@ -42,11 +42,37 @@ NEWS_SCHEDULE = [
 
 # Feedback loop interval (seconds) — labels expired signals with actual_move
 FEEDBACK_INTERVAL = 1800  # every 30 min
-FEEDBACK_BATCH = 50       # max signals labeled per run
+# Max signals labeled per run. Each label costs one Alpha Vantage request
+# (25/day free tier) — the quota tracker hard-blocks at the limit, this
+# just keeps a single run from consuming the whole daily budget.
+FEEDBACK_BATCH = 10
 
 # Track running tasks so we can cancel on shutdown
 _tasks: list[asyncio.Task] = []
 _running = False
+
+# Recently processed events per EDGAR form type, persisted ACROSS poll
+# cycles so the change gate's story clustering (2h window) can actually
+# fire — a per-cycle list on a 5-minute loop could never span the window.
+_recent_events_by_form: dict[str, list] = {}
+
+
+def _remember_recent_event(form_type: str, event) -> None:
+    """Track a processed event for cross-cycle story clustering.
+
+    Prunes entries older than the change gate's cluster window.
+    """
+    from src.ingestion.change_gate import CLUSTER_WINDOW
+
+    events = _recent_events_by_form.setdefault(form_type, [])
+    events.append(event)
+
+    now = datetime.now(timezone.utc)
+    _recent_events_by_form[form_type] = [
+        e for e in events
+        if e.timestamp is not None
+        and (now - e.timestamp).total_seconds() < CLUSTER_WINDOW.total_seconds()
+    ]
 
 
 def _is_market_hours() -> bool:
@@ -62,8 +88,8 @@ def _is_market_hours() -> bool:
 async def _poll_edgar(form_type: str, limit: int) -> dict:
     """Fetch recent filings from EDGAR and run each through the pipeline."""
     from src.ingestion.edgar.client import fetch_filing_document, fetch_recent_filings
+    from src.ingestion.edgar.events import filing_to_event
     from src.ingestion.edgar.parser import parse_8k_filing
-    from src.ingestion.edgar.tasks import _filing_to_event
 
     stats = {
         "fetched": 0, "parsed": 0, "new": 0,
@@ -89,14 +115,16 @@ async def _poll_edgar(form_type: str, limit: int) -> dict:
 
     try:
         from src.ingestion.change_gate import is_meaningful_change
-        from src.ingestion.deduplicator import is_duplicate
+        from src.ingestion.deduplicator import claim, release
         has_dedup = True
     except Exception:
+        logger.warning("Dedup/change-gate unavailable — duplicates will not be filtered")
         has_dedup = False
 
     from src.agents.pipeline import build_pipeline
     pipeline = build_pipeline()
-    recent_events = []
+    # Cross-cycle memory so the 2h clustering window actually spans cycles
+    recent_events = _recent_events_by_form.get(form_type, [])
 
     for filing in filings:
         accession = filing.get("accession_number", "")
@@ -120,18 +148,23 @@ async def _poll_edgar(form_type: str, limit: int) -> dict:
             stats["skipped_boilerplate"] += 1
             continue
 
-        event = _filing_to_event(parsed, file_url)
+        event = filing_to_event(parsed, file_url)
 
+        claimed = False
         if has_dedup:
             try:
-                if is_duplicate(event.content_hash):
+                # Atomically claim the hash; released below if the pipeline fails
+                if not claim(event.content_hash):
                     stats["skipped_dup"] += 1
                     continue
+                claimed = True
                 if not is_meaningful_change(event, recent_events):
                     stats["skipped_dup"] += 1
                     continue
             except Exception:
-                pass
+                logger.warning(
+                    "Dedup check failed for filing %s — processing anyway", accession,
+                )
 
         stats["new"] += 1
 
@@ -149,10 +182,16 @@ async def _poll_edgar(form_type: str, limit: int) -> dict:
                 ticker, form_type, confidence * 100, n_evidence,
             )
             stats["pipeline_ok"] += 1
-            recent_events.append(event)
+            _remember_recent_event(form_type, event)
         except Exception:
             logger.exception("Pipeline failed for filing %s", accession)
             stats["pipeline_fail"] += 1
+            if claimed:
+                # Release the claim so a later poll can retry this filing
+                try:
+                    release(event.content_hash)
+                except Exception:
+                    logger.debug("Failed to release dedup claim for %s", accession)
 
     return stats
 
@@ -195,9 +234,10 @@ async def _poll_news(source: str) -> dict:
 
     # Dedup check
     try:
-        from src.ingestion.deduplicator import is_duplicate
+        from src.ingestion.deduplicator import claim, release
         has_dedup = True
     except Exception:
+        logger.warning("Dedup unavailable — duplicate articles will not be filtered")
         has_dedup = False
 
     from src.agents.pipeline import build_pipeline
@@ -209,16 +249,21 @@ async def _poll_news(source: str) -> dict:
         if not raw_text or len(raw_text) < 20:
             continue
 
-        # Dedup by content hash
+        # Dedup by content hash — claimed atomically, released on failure
+        content_hash = ""
+        claimed = False
         if has_dedup:
             try:
                 from src.ingestion.normalizer import generate_content_hash
                 content_hash = generate_content_hash(source, url, raw_text)
-                if is_duplicate(content_hash):
+                if not claim(content_hash):
                     stats["skipped_dup"] += 1
                     continue
+                claimed = True
             except Exception:
-                pass
+                logger.warning(
+                    "Dedup check failed for %s article — processing anyway", source,
+                )
 
         stats["new"] += 1
 
@@ -240,6 +285,12 @@ async def _poll_news(source: str) -> dict:
         except Exception:
             logger.exception("Pipeline failed for %s article: %s", source, url[:80])
             stats["pipeline_fail"] += 1
+            if claimed and content_hash:
+                # Release the claim so a later poll can retry this article
+                try:
+                    release(content_hash)
+                except Exception:
+                    logger.debug("Failed to release dedup claim for %s", url[:80])
 
     return stats
 

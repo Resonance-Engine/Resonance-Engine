@@ -8,6 +8,34 @@ from src.models.evidence import EvidenceItem
 from src.models.signal import Citation, Signal, SignalType
 
 
+@pytest.fixture(autouse=True)
+def _no_live_api_keys(request, monkeypatch):
+    """Blank all paid-API keys so tests can never spend real credits.
+
+    With live keys in .env, any test that reached embed_text or a market
+    data fetch silently made a REAL OpenAI/Alpha Vantage API call. Tests
+    that intentionally hit live APIs must use the "api" marker (they are
+    deselectable with -m "not api").
+    """
+    if request.node.get_closest_marker("api"):
+        return
+
+    import src.rag.embedder as embedder
+    from src.config import settings
+
+    monkeypatch.setattr(settings, "openai_api_key", "")
+    monkeypatch.setattr(settings, "gemini_api_key", "")
+    monkeypatch.setattr(settings, "embedding_backend", "")
+    monkeypatch.setattr(settings, "pinecone_api_key", "")
+    monkeypatch.setattr(settings, "alpha_vantage_api_key", "")
+    monkeypatch.setattr(settings, "finnhub_api_key", "")
+    monkeypatch.setattr(settings, "newsapi_key", "")
+    # Reset the embedder's cached client so a previously-initialized live
+    # client can't leak into this test.
+    monkeypatch.setattr(embedder, "_client", None)
+    monkeypatch.setattr(embedder, "_backend", "")
+
+
 @pytest.fixture
 def sample_entity() -> Entity:
     return Entity(ticker="AAPL", cik="0000320193", name="Apple Inc.", sic_code="3571")

@@ -143,3 +143,45 @@ async def test_agent_confidence_capped():
     }
     result = await impact_hypothesis_agent(state)
     assert result["confidence"] <= 0.95
+
+
+# --- Zero-evidence confidence vs risk gate interaction ---
+
+def _no_evidence_state(raw_confidence: float) -> dict:
+    return {
+        "event_id": "evt_conf",
+        "raw_text": "Company reports quarterly results.",
+        "source": "SEC_EDGAR",
+        "source_url": "",
+        "content_hash": "h",
+        "event_type_refined": "earnings",
+        "primary_ticker": "TST",
+        "sentiment_label": "neutral",
+        "sentiment_score": 0.0,
+        "raw_confidence": raw_confidence,
+        "summary": "test",
+        "errors": [],
+        "agent_chain": [],
+    }
+
+
+@pytest.mark.asyncio
+async def test_zero_evidence_typical_extraction_passes_gate():
+    """A typical extraction (raw 0.5) anchors at 0.42 — above the 0.40 gate."""
+    result = await impact_hypothesis_agent(_no_evidence_state(0.5))
+    assert result["confidence"] == pytest.approx(0.42, abs=1e-4)
+
+
+@pytest.mark.asyncio
+async def test_zero_evidence_weak_extraction_falls_below_gate():
+    """Regression: the old 0.42 hard floor made the risk gate's <0.40
+    rejection unreachable from the production pipeline. Weak extractions
+    must now be able to fall below the gate."""
+    result = await impact_hypothesis_agent(_no_evidence_state(0.3))
+    assert result["confidence"] < 0.40
+
+
+@pytest.mark.asyncio
+async def test_zero_evidence_capped_at_055():
+    result = await impact_hypothesis_agent(_no_evidence_state(1.0))
+    assert result["confidence"] <= 0.55

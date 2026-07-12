@@ -149,7 +149,6 @@ async def fetch_recent_filings_rss(form_type: str = "8-K", limit: int = 40) -> l
         link_el = entry.find("atom:link", ns)
         link = link_el.get("href", "") if link_el is not None else ""
         updated = entry.findtext("atom:updated", "", ns)
-        summary = entry.findtext("atom:summary", "", ns)
 
         # Parse CIK and accession from the link
         cik = ""

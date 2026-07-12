@@ -1,7 +1,7 @@
 """Resonance Engine — Celery application factory with Beat schedule."""
 
 from celery import Celery
-from celery.schedules import crontab, solar
+from celery.schedules import crontab
 
 from src.config import settings
 

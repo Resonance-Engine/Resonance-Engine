@@ -1,114 +1,26 @@
-"""Celery tasks for EDGAR ingestion — scheduled polling + processing."""
+"""Celery tasks for EDGAR ingestion — scheduled polling + processing.
+
+DEPRECATED as a runtime: the async scheduler (src/scheduler.py) replaced
+Celery Beat (incompatible with Python 3.14). Kept only until Celery is
+formally removed. Live code must import filing_to_event from
+src.ingestion.edgar.events, NOT from this module.
+"""
 
 import asyncio
 import logging
-from datetime import date, datetime, timezone
+from datetime import date
 
 from src.celery_app import app
 from src.ingestion.change_gate import is_meaningful_change
 from src.ingestion.deduplicator import is_duplicate
 from src.ingestion.edgar.client import fetch_filing_document, fetch_recent_filings
+from src.ingestion.edgar.events import filing_to_event
 from src.ingestion.edgar.parser import parse_8k_filing
-from src.ingestion.normalizer import normalize_event
-from src.models.entity import Entity
-from src.models.event import EventSource
-from src.nlp.entity_resolver import resolve_by_cik, resolve_entities
 
 logger = logging.getLogger(__name__)
 
-
-def _filing_to_event(parsed: dict, file_url: str):
-    """Convert a parsed filing dict into a normalized Event."""
-    # Build entity from parsed filing data, resolving ticker via entity resolver
-    entities = []
-    cik = parsed.get("cik", "")
-    company_name = parsed.get("company_name", "")
-
-    # Try CIK-based resolution first (most reliable for SEC filings)
-    if cik:
-        resolved = resolve_by_cik(cik)
-        if resolved:
-            entities.append(Entity(
-                ticker=resolved.ticker,
-                cik=cik,
-                name=resolved.name,
-                sic_code=parsed.get("sic_code") or resolved.sic_code,
-            ))
-
-    # Fallback: resolve from filing text (catches additional mentioned entities)
-    if not entities and company_name:
-        text_entities = resolve_entities(company_name)
-        if text_entities:
-            entities.append(Entity(
-                ticker=text_entities[0].ticker,
-                cik=cik or text_entities[0].cik,
-                name=text_entities[0].name,
-                sic_code=parsed.get("sic_code") or text_entities[0].sic_code,
-            ))
-
-    # Last resort: use raw parsed data with empty ticker
-    if not entities and company_name:
-        entities.append(Entity(
-            ticker="",
-            cik=cik,
-            name=company_name,
-            sic_code=parsed.get("sic_code"),
-        ))
-
-    # Also extract any additional entities mentioned in the filing text
-    raw_text_for_resolution = ""
-    for item in parsed.get("items", []):
-        raw_text_for_resolution += item.get("text", "") + " "
-    if raw_text_for_resolution.strip():
-        additional = resolve_entities(raw_text_for_resolution)
-        existing_tickers = {e.ticker for e in entities}
-        for ent in additional:
-            if ent.ticker and ent.ticker not in existing_tickers:
-                entities.append(ent)
-                existing_tickers.add(ent.ticker)
-
-    # Determine event type from 8-K item codes
-    event_type = None
-    item_codes = parsed.get("item_codes", [])
-    if item_codes:
-        # Map primary item code to a human-readable event type
-        primary = item_codes[0]
-        event_type = f"8k_item_{primary.replace('.', '_')}"
-
-    # Parse filed date
-    filed_str = parsed.get("filed_date", "")
-    timestamp = None
-    if filed_str and len(filed_str) == 8:
-        try:
-            timestamp = datetime.strptime(filed_str, "%Y%m%d").replace(tzinfo=timezone.utc)
-        except ValueError:
-            pass
-    if filed_str and len(filed_str) == 10:
-        try:
-            timestamp = datetime.strptime(filed_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-        except ValueError:
-            pass
-
-    # Build the raw text: item texts joined, fallback to full_text
-    raw_text = ""
-    for item in parsed.get("items", []):
-        raw_text += f"[Item {item['item_code']}] {item['text']}\n\n"
-    if not raw_text:
-        raw_text = parsed.get("full_text", "")[:10000]
-
-    return normalize_event(
-        source=EventSource.SEC_EDGAR,
-        url=file_url,
-        raw_text=raw_text,
-        timestamp=timestamp,
-        metadata={
-            "form_type": parsed.get("form_type", "8-K"),
-            "accession_number": parsed.get("accession_number", ""),
-            "item_codes": item_codes,
-            "is_boilerplate": parsed.get("is_boilerplate", False),
-            "entities_raw": [e.model_dump() for e in entities],
-        },
-    )
+# Backward-compatible alias (previous private name)
+_filing_to_event = filing_to_event
 
 
 @app.task(name="edgar.poll_recent_filings", bind=True, max_retries=3)
@@ -170,7 +82,7 @@ async def _poll_recent_filings_async(form_type: str, limit: int) -> dict:
             continue
 
         # 5. Convert to Event
-        event = _filing_to_event(parsed, file_url)
+        event = filing_to_event(parsed, file_url)
 
         # 6. Dedup via Redis
         if is_duplicate(event.content_hash):

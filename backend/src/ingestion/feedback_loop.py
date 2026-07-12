@@ -17,7 +17,7 @@ from src.storage.signal_repo import list_unlabeled_expired, update_actual_move
 logger = logging.getLogger(__name__)
 
 
-async def label_expired_signals(batch_size: int = 50) -> dict:
+async def label_expired_signals(batch_size: int = 10) -> dict:
     """Find signals whose impact_window has expired and label them.
 
     For each unlabeled-expired signal:
@@ -28,9 +28,12 @@ async def label_expired_signals(batch_size: int = 50) -> dict:
          don't subscribe to).
 
     Args:
-        batch_size: Max signals to label per run (default 50).
-            Bounded to keep within Alpha Vantage's 25 req/day free tier
-            across multiple loop iterations per day.
+        batch_size: Max signals to label per run (default 10). Each signal
+            costs one Alpha Vantage request (25/day free tier). The quota
+            tracker in market_data hard-blocks at the limit, so an oversized
+            batch degrades to no_data rather than a ban — but keeping the
+            default under the daily budget lets multiple runs/day make
+            progress. Unlabeled signals are retried on later runs.
 
     Returns:
         Stats dict with: scanned, labeled, no_data, errors.

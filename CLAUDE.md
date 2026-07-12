@@ -13,7 +13,7 @@ Financial intelligence platform that transforms unstructured SEC filings and new
 **Phase 0 Goal (achieved):** Prove the core pipeline works end-to-end with EDGAR filings.
 **Phase 1 Goal (achieved):** Generate evidence-backed signals via LangGraph agent pipeline + RAG.
 
-**What's implemented (working code, 195 tests passing):**
+**What's implemented (working code, 262 tests passing):**
 - Pydantic models: `src/models/` (event, signal, entity, evidence)
 - SQLAlchemy ORM: `src/storage/models.py` (EventModel, SignalModel, EntityModel with indexes)
 - Config: `src/config.py` (Pydantic Settings, all env vars)
@@ -55,17 +55,22 @@ Financial intelligence platform that transforms unstructured SEC filings and new
 - Frontend wiring: CommandCore + SignalResolution fetch from backend API with fallback
 - Vite proxy: `frontend/vite.config.js` (proxy /api → localhost:8000)
 
-**What's skeleton/TODO (stubs only):**
-- All gateway: `src/gateway/`
-- News ingestion: `src/ingestion/gdelt/`, `src/ingestion/newsapi/`
+- WebSocket gateway: `src/gateway/` (broadcaster, ring buffer, authenticated `/ws?token=` endpoint — LIVE, wired into pipeline via `notify_new_signal`)
+- News ingestion: `src/ingestion/gdelt/` (GDELT DOC 2.0, free) + `src/ingestion/newsapi/` (quota-gated)
+- Async scheduler: `src/scheduler.py` (EDGAR + news polling + feedback loop, market-hours gated; replaced Celery Beat — Celery is incompatible with Python 3.14)
+- Feedback loop: `src/ingestion/feedback_loop.py` (labels expired signals with actual market moves)
+- Labeled test set: `backend/data/labeled_test_set.json` (100 events with ground truth)
+
+**Dead code (do not build on):**
+- `src/celery_app.py` and the `@app.task` wrappers in `src/ingestion/*/tasks.py` — replaced by the async scheduler. Live EDGAR filing→Event conversion lives in `src/ingestion/edgar/events.py` (`filing_to_event`).
 
 ## Phase 2 Priorities (in order)
 
 1. ~~**FastAPI REST API**~~ — DONE: `src/api/` (12 routes, auth, CORS)
 2. ~~**Frontend integration**~~ — DONE: API client, auth flow, dashboard wiring
-3. **WebSocket gateway** — `src/gateway/` (real-time signal push)
-4. **News ingestion expansion** — GDELT + NewsAPI
-5. **Labeled test set** — 100 events with ground truth for evaluation
+3. ~~**WebSocket gateway**~~ — DONE: `src/gateway/` (real-time signal push, token-authenticated)
+4. ~~**News ingestion expansion**~~ — DONE: GDELT + NewsAPI (quota-tracked)
+5. ~~**Labeled test set**~~ — DONE: 100 events with ground truth for evaluation
 6. **Live end-to-end test** — Docker Compose up → Alembic migrate → real EDGAR filing → signal
 
 ## Core Pipeline Architecture
@@ -81,7 +86,7 @@ Ingestion → Normalize/Dedupe → Change Gate → Entity Resolution → Event E
 
 ## Tech Stack
 
-- Python 3.11+ (strict mypy, ruff linting)
+- Python 3.14 runtime (ruff clean; mypy strict is aspirational — ~228 errors outstanding)
 - FastAPI + uvicorn (API, Phase 2)
 - SQLAlchemy 2.0 async + asyncpg (PostgreSQL)
 - Celery + Redis (task queue)
@@ -97,8 +102,9 @@ Ingestion → Normalize/Dedupe → Change Gate → Entity Resolution → Event E
 cd backend && pytest tests/ -v
 ```
 
-- Working tests: `test_change_gate.py`, `test_normalizer.py`, `test_risk_gate.py`, `test_metrics.py`
-- Skeleton tests: everything else in `tests/`
+- 262 passing unit + integration tests; live-API tests use the `api` marker (deselect with `-m "not api"`)
+- Tests can NEVER spend API credits: `tests/conftest.py` has an autouse fixture that blanks all paid-API keys unless a test is marked `api`
+- Remaining skip-only stubs: `tests/api/` (live external API smoke tests)
 - Fixtures: `tests/conftest.py` (sample entity, event, signal, evidence)
 - Config: `pyproject.toml` — asyncio_mode=auto, ruff line-length=100, mypy strict
 

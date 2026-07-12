@@ -56,6 +56,16 @@ _WELL_KNOWN_COMPANIES: dict[str, str] = {
     "Berkshire Hathaway": "BRK-B", "UnitedHealth": "UNH",
 }
 
+# Precompiled word-boundary patterns for well-known names.
+# Case-SENSITIVE on purpose: many of these names are common English words in
+# lowercase ("meta", "target", "visa", "apple") — naive substring or
+# case-insensitive matching produced systematic false positives like
+# "metal supply" → META and "targeted cost reductions" → TGT.
+_WELL_KNOWN_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\b" + re.escape(name) + r"\b"), ticker)
+    for name, ticker in _WELL_KNOWN_COMPANIES.items()
+]
+
 
 def _cache_path() -> Path:
     return CACHE_DIR / "company_tickers.json"
@@ -220,10 +230,10 @@ def resolve_entities(text: str) -> list[Entity]:
         if entity and entity.ticker not in resolved:
             resolved[entity.ticker] = entity
 
-    # 2. Well-known company names (catches names without standard suffixes)
-    text_lower = text.lower()
-    for name, ticker in _WELL_KNOWN_COMPANIES.items():
-        if name.lower() in text_lower:
+    # 2. Well-known company names (catches names without standard suffixes).
+    # Word-boundary + case-sensitive — see _WELL_KNOWN_PATTERNS.
+    for pattern, ticker in _WELL_KNOWN_PATTERNS:
+        if pattern.search(text):
             entity = resolve_by_ticker(ticker)
             if entity and entity.ticker not in resolved:
                 resolved[entity.ticker] = entity

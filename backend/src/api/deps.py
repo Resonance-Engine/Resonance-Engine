@@ -1,5 +1,6 @@
 """Dependency injection — DB sessions, auth, rate limiting (Phase 2)."""
 
+import hmac
 from collections.abc import AsyncGenerator
 
 from fastapi import Depends, HTTPException, status
@@ -29,6 +30,22 @@ _bearer = HTTPBearer(auto_error=False)
 _VALID_TOKENS = {settings.auth_token} if settings.auth_token else set()
 
 
+def validate_token(token: str | None) -> bool:
+    """Check a token against the valid set in constant time.
+
+    Used by both HTTP bearer auth and the WebSocket handshake.
+
+    Args:
+        token: The presented token (may be None/empty).
+
+    Returns:
+        True if the token matches a configured valid token.
+    """
+    if not token:
+        return False
+    return any(hmac.compare_digest(token, valid) for valid in _VALID_TOKENS)
+
+
 async def get_current_user(
     creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> str:
@@ -37,7 +54,7 @@ async def get_current_user(
     For Phase 2 MVP this checks against a static token set.
     Production will use JWT with expiration.
     """
-    if creds is None or creds.credentials not in _VALID_TOKENS:
+    if creds is None or not validate_token(creds.credentials):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing authentication token",
@@ -50,6 +67,6 @@ async def get_optional_user(
     creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> str | None:
     """Return operator identity if token is valid, None otherwise."""
-    if creds is None or creds.credentials not in _VALID_TOKENS:
+    if creds is None or not validate_token(creds.credentials):
         return None
     return "operator"

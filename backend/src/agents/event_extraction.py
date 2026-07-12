@@ -27,7 +27,7 @@ EVENT_TYPE_RULES: list[tuple[str, list[str]]] = [
 ]
 
 
-def event_extraction_agent(state: PipelineState) -> dict:
+async def event_extraction_agent(state: PipelineState) -> dict:
     """Agent 3: Event with entities → Event with type, sentiment, confidence.
 
     Reads: raw_text, event_type, summary
@@ -64,10 +64,12 @@ def event_extraction_agent(state: PipelineState) -> dict:
             sentiment_label = "neutral"
         sentiment_score = abs(net)
 
-        # 3. Try FinBERT for deeper classification (if available)
+        # 3. Try FinBERT for deeper classification (if available).
+        # Runs in a worker thread — a synchronous forward pass here would
+        # block the event loop for every concurrent pipeline run.
         try:
-            from src.nlp.finbert import classify_sentiment
-            finbert_result = classify_sentiment(raw_text[:2000])
+            from src.nlp.finbert import classify_sentiment_async
+            finbert_result = await classify_sentiment_async(raw_text[:2000])
             sentiment_label = finbert_result.label
             sentiment_score = finbert_result.score
         except Exception:

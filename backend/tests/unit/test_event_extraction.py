@@ -3,7 +3,7 @@
 from src.agents.event_extraction import EVENT_TYPE_RULES, event_extraction_agent
 
 
-def test_earnings_classification():
+async def test_earnings_classification():
     """Earnings-related text should be classified as 'earnings'."""
     state = {
         "raw_text": "Apple Inc. reported quarterly earnings of $1.52 per share, beating estimates by $0.05.",
@@ -13,12 +13,12 @@ def test_earnings_classification():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert result["event_type_refined"] == "earnings"
     assert result["sentiment_label"] in ("positive", "negative", "neutral")
 
 
-def test_lawsuit_classification():
+async def test_lawsuit_classification():
     """Litigation text should be classified as 'lawsuit'."""
     state = {
         "raw_text": "The company has been sued in a class action lawsuit alleging securities fraud and litigation damages.",
@@ -28,11 +28,11 @@ def test_lawsuit_classification():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert result["event_type_refined"] == "lawsuit"
 
 
-def test_fda_classification():
+async def test_fda_classification():
     """FDA-related text should be classified as 'fda_approval'."""
     state = {
         "raw_text": "The FDA has granted approval for the company's new drug treatment following successful clinical trial phase 3.",
@@ -42,11 +42,11 @@ def test_fda_classification():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert result["event_type_refined"] == "fda_approval"
 
 
-def test_merger_classification():
+async def test_merger_classification():
     """M&A text should be classified as 'merger_acquisition'."""
     state = {
         "raw_text": "Company A has entered into a definitive agreement to acquire Company B for $5 billion in a merger deal.",
@@ -56,11 +56,11 @@ def test_merger_classification():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert result["event_type_refined"] == "merger_acquisition"
 
 
-def test_sentiment_negative():
+async def test_sentiment_negative():
     """Negative financial text should produce negative sentiment."""
     state = {
         "raw_text": "The company reported a loss and negative revenue decline with impairment charges and restructuring costs.",
@@ -70,11 +70,11 @@ def test_sentiment_negative():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert result["sentiment_label"] == "negative"
 
 
-def test_lm_scores_populated():
+async def test_lm_scores_populated():
     """LM lexicon scores should be populated in result."""
     state = {
         "raw_text": "Revenue increased substantially with favorable growth prospects.",
@@ -84,13 +84,13 @@ def test_lm_scores_populated():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert "lm_scores" in result
     assert "net_sentiment" in result["lm_scores"]
     assert "total_words" in result["lm_scores"]
 
 
-def test_summary_enriched_with_ticker():
+async def test_summary_enriched_with_ticker():
     """Summary should include ticker and event type when available."""
     state = {
         "raw_text": "Apple Inc. reported quarterly earnings beating analyst expectations.",
@@ -100,11 +100,11 @@ def test_summary_enriched_with_ticker():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert "AAPL" in result["summary"]
 
 
-def test_confidence_in_bounds():
+async def test_confidence_in_bounds():
     """Raw confidence should be between 0 and 1."""
     state = {
         "raw_text": "Company announced major restructuring and layoff of 5000 employees.",
@@ -114,11 +114,11 @@ def test_confidence_in_bounds():
         "errors": [],
         "agent_chain": [],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert 0.0 <= result.get("raw_confidence", 0) <= 1.0
 
 
-def test_agent_chain_updated():
+async def test_agent_chain_updated():
     """Agent chain should include event_extraction."""
     state = {
         "raw_text": "Test text",
@@ -127,5 +127,5 @@ def test_agent_chain_updated():
         "errors": [],
         "agent_chain": ["ingestion", "entity_resolution"],
     }
-    result = event_extraction_agent(state)
+    result = await event_extraction_agent(state)
     assert "event_extraction" in result["agent_chain"]

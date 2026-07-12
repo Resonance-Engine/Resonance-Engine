@@ -2,9 +2,6 @@
 
 from typing import TypedDict
 
-from src.models.entity import Entity
-from src.models.evidence import EvidenceItem
-from src.models.signal import Citation
 
 
 class PipelineState(TypedDict, total=False):

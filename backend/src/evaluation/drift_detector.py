@@ -166,7 +166,6 @@ def _t_test_p_value(t: float, df: float) -> float:
     where Φ is the standard normal CDF. Accurate for df > 4.
     For smaller df, falls back to a conservative estimate.
     """
-    import math
 
     if df <= 0:
         return 1.0

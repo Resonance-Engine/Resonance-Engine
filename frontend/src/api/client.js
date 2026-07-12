@@ -133,7 +133,10 @@ export async function checkHealth() {
  */
 export function connectSignalWS({ onSignal, onCatchUp, onOpen, onClose }) {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const url = `${proto}//${window.location.host}/api/ws`
+  // WS handshake can't carry an Authorization header from the browser,
+  // so the bearer token is passed as a query parameter instead.
+  const token = getToken()
+  const url = `${proto}//${window.location.host}/api/ws?token=${encodeURIComponent(token || '')}`
   let ws = null
   let pingInterval = null
   let shouldReconnect = true

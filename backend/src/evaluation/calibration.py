@@ -198,11 +198,11 @@ def calibrate_platt(raw_scores: list[float], labels: list[bool]) -> callable:
     n = len(raw_scores)
 
     # Target values with Laplace smoothing (Platt 1999)
-    n_pos = sum(1 for l in labels if l)
+    n_pos = sum(1 for lbl in labels if lbl)
     n_neg = n - n_pos
     target_pos = (n_pos + 1) / (n_pos + 2) if n_pos > 0 else 0.5
     target_neg = 1 / (n_neg + 2) if n_neg > 0 else 0.5
-    targets = [target_pos if l else target_neg for l in labels]
+    targets = [target_pos if lbl else target_neg for lbl in labels]
 
     for _ in range(1000):
         grad_a = 0.0

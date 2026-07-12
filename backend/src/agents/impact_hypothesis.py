@@ -54,7 +54,7 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
         try:
             from src.models.event import Event, EventSource
             from src.rag.evidence_builder import build_evidence
-            from src.rag.retriever import retrieve_similar_events
+            from src.rag.retriever import retrieve_similar_events_multi
 
             # Build a minimal Event for the retriever
             event = Event(
@@ -72,29 +72,13 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
 
             # Search ALL namespaces for evidence — a NEWSAPI article about AMZN
             # should find similar AMZN events in sec_edgar, gdelt, etc.
-            all_namespaces = ["sec_edgar", "gdelt", "newsapi"]
-            similar: list[dict] = []
-            seen_ids: set[str] = set()
-
-            for ns in all_namespaces:
-                try:
-                    ns_results = await retrieve_similar_events(
-                        event=event,
-                        top_k=5,
-                        min_similarity=0.70,
-                        namespace=ns,
-                    )
-                    for r in ns_results:
-                        eid = r.get("event_id", "")
-                        if eid not in seen_ids:
-                            seen_ids.add(eid)
-                            similar.append(r)
-                except Exception:
-                    continue  # namespace may not exist yet
-
-            # Keep top 5 by similarity
-            similar.sort(key=lambda x: x.get("similarity_score", 0), reverse=True)
-            similar = similar[:5]
+            # Embeds once, merges by vector id, returns top 5 by score.
+            similar = await retrieve_similar_events_multi(
+                event=event,
+                namespaces=["sec_edgar", "gdelt", "newsapi"],
+                top_k=5,
+                min_similarity=0.70,
+            )
 
             if similar:
                 evidence_objs = await build_evidence(similar, max_items=5)
@@ -111,7 +95,8 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
 
         # 4. Calibrate confidence
         # Evidence quality is the primary driver. Sentiment adds a small bonus.
-        # Target ranges: 0 evidence → 42-50%, 1-2 → 58-75%, 3+ → 68-85%
+        # Target ranges: 0 evidence → ~37-55% (weak extractions fall below the
+        # risk gate's 0.40 line), 1-2 → 58-75%, 3+ → 68-85%
         n_evidence = len(evidence_items)
         sentiment_bonus = abs(sentiment_score) * 0.05  # 0-0.05 from sentiment strength
 
@@ -129,7 +114,14 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
             # 1 evidence at 0.70 sim → 0.42 + 0.33*0.70 + ~0.01 = 0.661
             confidence = min(0.42 + 0.33 * avg_similarity + sentiment_bonus, 0.75)
         else:
-            confidence = max(min(raw_confidence * 0.6, 0.55), 0.42)
+            # No evidence: anchor at 0.42 for a typical extraction
+            # (raw_confidence=0.5) scaling to the 0.55 cap, but let weak
+            # extractions fall BELOW the risk gate's 0.40 rejection line.
+            # The old hard floor of 0.42 made the gate's low-confidence
+            # rejection unreachable from the production pipeline.
+            # raw 0.5 → 0.42 | raw 1.0 → 0.55 | raw 0.3 → 0.368 (rejected)
+            confidence = min(0.42 + (raw_confidence - 0.5) * 0.26, 0.55)
+            confidence = max(confidence, 0.0)
 
         confidence = round(confidence, 4)
 

@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models — database table definitions."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Float, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -27,7 +27,7 @@ class EventModel(Base):
     summary = Column(Text)
     confidence = Column(Float)
     metadata_ = Column("metadata", JSONB, default=dict)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
         Index("ix_events_timestamp_desc", timestamp.desc()),
@@ -55,7 +55,7 @@ class SignalModel(Base):
     evidence = Column(JSONB, default=list)
     citations = Column(JSONB, default=list)
     metadata_ = Column("metadata", JSONB, default=dict)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
         Index("ix_signals_timestamp_desc", timestamp.desc()),
@@ -72,4 +72,4 @@ class EntityModel(Base):
     name = Column(String, nullable=False)
     sic_code = Column(String)
     metadata_ = Column("metadata", JSONB, default=dict)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

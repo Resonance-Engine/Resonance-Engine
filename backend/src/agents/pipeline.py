@@ -55,7 +55,6 @@ async def _store_signal_node(state: PipelineState) -> dict:
         from src.storage.signal_repo import insert_signal
 
         # Map event type to signal type
-        event_type = state.get("event_type_refined") or state.get("event_type", "")
         sentiment = state.get("sentiment_label", "neutral")
         predicted_move = state.get("predicted_move")
 
@@ -134,7 +133,12 @@ async def _store_signal_node(state: PipelineState) -> dict:
                     "timestamp": state.get("timestamp", ""),
                     "summary": state.get("summary", "")[:500],
                     "source": state.get("source", ""),
-                    "actual_move": state.get("predicted_move"),
+                    # NOTE: deliberately NOT stored as "actual_move" — that key is
+                    # read by evidence_builder as the observed historical outcome.
+                    # Real outcomes live in Postgres (signals.actual_move, written
+                    # by the feedback loop) and are found via the signal-repo
+                    # fallback in evidence_builder._get_outcome.
+                    "predicted_move": state.get("predicted_move"),
                 },
                 namespace=_source_to_namespace(state.get("source", "")),
             )
