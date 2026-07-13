@@ -37,21 +37,26 @@ rises. Threshold is Reiyyan's product knob.
 
 ---
 
-### Bet D — Direction from surprise, not tone — **ACTIVE (probe positive)**
-**Finding 005:** Yahoo `earningsHistory` (free) solved the sourcing question.
-On 185 real joins: beats are priced in (85% of events, no signal), but
-**misses are punished** — P(negative | miss) = 78.6%, P(≤−2%) = 60.7%,
-median −4.1%, monotone across surprise buckets, AUC 0.605. First recoverable
-directional signal, but n(miss)=28 and no time split possible yet.
-**Validation protocol:** scale to the S&P 500 (~2,000 joins, ~300 misses) —
-fetch earningsHistory for ~500 tickers + rebuild labels with exp002 machinery.
-**Kill criterion:** P(negative | miss) < 65% on the scaled sample, or the
-monotone bucket structure disappears.
-**Not wired into the pipeline until validated** — same discipline as Bet C.
-Live sketch when it passes: consensus fetched pre-filing, actual EPS parsed
-from the 8-K, surprise computed at signal time (no lookahead).
+### Bet E — Refit magnitude model on the 13k-event S&P 500 set
+**Question:** Does the F004 magnitude model hold out-of-universe (502 tickers
+vs the 46 it was fit on), and do sector / market-cap / surprise features
+raise AUC materially beyond 0.727?
+**Asset:** `data/sp500_labeled_8k_set.json` (13,022 events, exp006 by-product).
+**Kill criterion:** if the shipped F004 weights degrade badly out-of-universe
+(test Brier worse than the item-code base-rate table on the S&P 500 sample),
+that's a production incident — the shipped confidence is miscalibrated for
+non-mega-caps and must be refit or scoped before more signals go out.
+**Cost ceiling:** $0. ~1 session.
 
 ## Killed
+
+### ~~Bet D — EPS-miss directional alert~~ (2026-07-13)
+Finding 006: pre-registered S&P 500 validation (13,022 events, 350 misses)
+came in at P(negative | miss) = 60.9% vs the 65% bar. The probe's 78.6%
+(n=28) was small-sample optimism. Monotone structure held — surprise is a
+real *feature* (~10-19pp off coin-flip at the tails) but not a standalone
+high-conviction alert. Product stays magnitude-first. Follow-up slices
+(deep miss, guidance cuts, cap interaction) require fresh pre-registration.
 
 ### ~~Bet B — direction from filing-text sentiment~~ (2026-07-13)
 Finding 003: on 370 real earnings 8-Ks, time-split, neither L-M (55.9% acc,
