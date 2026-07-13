@@ -87,10 +87,29 @@ implemented. Baseline: 209 tests passing, 13 ruff errors, 228 mypy errors.
 - `/pipeline/run` 500s no longer echo raw exception strings to clients.
 - CLAUDE.md corrected: gateway/news/scheduler are implemented (not "stubs"), Phase 2 items 3–5 marked done, Python 3.14 runtime noted, test-suite documentation updated.
 
+## Follow-up: EDGAR EFTS parsing — VERIFIED BROKEN and FIXED (2026-07-12, same day)
+
+Checked against the live API. Confirmed worse than suspected — **EDGAR ingestion
+via EFTS never worked at all**:
+- `_source` reads used nonexistent fields (`entity_id`/`entity_name`/`form_type`);
+  real fields are `ciks[]`/`display_names[]`/`form`. CIK was always `""` →
+  every `file_url` was malformed.
+- The unit test mocked the same imaginary shape, so it stayed green while
+  production 404'd (lesson: mock shapes must be captured from the live API).
+- `q='formType:"8-K"'` full-text-searched for that literal string inside
+  documents; the `forms` param alone is the correct filter (152 docs vs 39).
+- EFTS hits are DOCUMENTS (exhibits), not filings — added dedupe by accession.
+- **Second latent bug found by the live smoke test:** `fetch_filing_document`
+  zero-padded the CIK, but Archives paths need it UNPADDED — SEC 301s and we
+  didn't follow redirects, so document fetching was broken through every path.
+Fixes: rewritten parser (`_efts_hit_to_filing` — also extracts ticker + 8-K
+item codes from the response), dedupe-by-accession pagination, unpadded CIK +
+`follow_redirects=True`. Verified live end-to-end: EFTS search → 5 real
+filings (correct tickers/CIKs) → fetched a real 179KB 8-K document. 262→266 tests.
+
 ## Known issues deliberately NOT addressed (ranked backlog)
 
-1. **EDGAR EFTS response parsing** (`edgar/client.py::fetch_recent_filings`) — likely reads wrong `_source` fields (`entity_id`/`adsh` vs real `ciks`/`display_names`/`_id`). Needs verification against the live API before changing. The "falling back to submissions API" log message is also a lie (no fallback exists).
-2. **EDGAR rate limiter** — `Semaphore(10)` + 0.12s sleep allows ~80 req/s bursts if callers ever go concurrent (currently sequential, so latent). Should be a token bucket or `Semaphore(1)`.
+1. **EDGAR rate limiter** — `Semaphore(10)` + 0.12s sleep allows ~80 req/s bursts if callers ever go concurrent (currently sequential, so latent). Should be a token bucket or `Semaphore(1)`.
 3. **Repo transaction boundaries** — write helpers `commit()` caller-supplied sessions; atomic multi-write transactions are impossible. Needs `flush`-when-external-session pattern.
 4. **Postgres↔Pinecone orphan risk** — no reconciliation sweep; `reembed_pinecone.py` is manual.
 5. **Backtester PBO** — claims CSCV, implements contiguous sliding half-splits (weak overfitting gate). Needs `itertools.combinations` partitioning. Median also takes upper element for even n.

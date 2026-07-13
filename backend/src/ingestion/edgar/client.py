@@ -66,8 +66,16 @@ async def fetch_recent_filings(
     if end_date is None:
         end_date = date.today().isoformat()
 
+    # NOTE (verified against the live API 2026-07-12):
+    # - No "q" param: the "forms" filter alone returns every document for
+    #   the form/date range. The old q='formType:"8-K"' full-text-searched
+    #   for that literal string inside document text.
+    # - Each EFTS hit is a DOCUMENT (exhibit), not a filing — one filing
+    #   yields several hits, so results are deduplicated by accession.
+    # - _source fields are ciks[]/display_names[]/form/adsh/file_date.
+    #   The previous parser read entity_id/entity_name/form_type — none of
+    #   which exist — so cik was always "" and every file_url 404'd.
     params = {
-        "q": f'formType:"{form_type}"',
         "dateRange": "custom",
         "startdt": start_date,
         "enddt": end_date,
@@ -75,8 +83,9 @@ async def fetch_recent_filings(
     }
 
     filings: list[dict] = []
+    seen_accessions: set[str] = set()
     from_param = 0
-    page_size = min(limit, 50)  # EFTS max page size is 50
+    page_size = 50  # EFTS max page size (document-level, pre-dedup)
 
     async with httpx.AsyncClient(headers=HEADERS, timeout=30.0) as client:
         while len(filings) < limit:
@@ -84,14 +93,13 @@ async def fetch_recent_filings(
             params["size"] = str(page_size)
 
             try:
-                resp = await _throttled_get(
-                    client,
-                    "https://efts.sec.gov/LATEST/search-index",
-                    params=params,
-                )
+                resp = await _throttled_get(client, EFTS_SEARCH_URL, params=params)
                 data = resp.json()
             except httpx.HTTPStatusError as e:
-                logger.warning("EFTS search returned %s, falling back to submissions API", e.response.status_code)
+                logger.warning(
+                    "EFTS search returned %s — returning %d filings collected so far",
+                    e.response.status_code, len(filings),
+                )
                 break
             except Exception:
                 logger.exception("EFTS search failed")
@@ -103,29 +111,71 @@ async def fetch_recent_filings(
 
             for hit in hits:
                 source = hit.get("_source", {})
-                file_num = source.get("file_num", "")
-                cik = source.get("entity_id", "")
-                accession = source.get("adsh", "").replace("-", "")
+                accession = source.get("adsh", "")
+                if not accession or accession in seen_accessions:
+                    continue  # another document of an already-seen filing
+                seen_accessions.add(accession)
 
-                filings.append({
-                    "accession_number": source.get("adsh", ""),
-                    "cik": cik,
-                    "company_name": source.get("entity_name", ""),
-                    "form_type": source.get("form_type", form_type),
-                    "filed_date": source.get("file_date", ""),
-                    "file_url": (
-                        f"https://www.sec.gov/Archives/edgar/data/"
-                        f"{cik}/{accession}/{source.get('adsh', '')}.txt"
-                    ),
-                    "file_number": file_num,
-                })
+                filings.append(_efts_hit_to_filing(source, form_type))
+                if len(filings) >= limit:
+                    break
 
             from_param += len(hits)
-            if len(hits) < page_size:
+            if len(hits) < page_size or from_param >= 10000:  # EFTS window cap
                 break
 
     logger.info("Fetched %d %s filings (%s to %s)", len(filings), form_type, start_date, end_date)
     return filings[:limit]
+
+
+def _efts_hit_to_filing(source: dict, requested_form: str) -> dict:
+    """Convert an EFTS document hit's _source into filing metadata.
+
+    Real _source shape (live API): ciks: list[str] (zero-padded),
+    display_names: list[str] ("Company Name  (TICK)  (CIK 0001234567)"),
+    form: str (actual form, e.g. "8-K/A"), adsh: str, file_date: str,
+    file_num: list[str], items: list[str] (8-K item codes).
+
+    Args:
+        source: The hit's _source dict.
+        requested_form: Form type used in the query (fallback only).
+
+    Returns:
+        Filing metadata dict: accession_number, cik, company_name, ticker,
+        form_type, filed_date, file_url, file_number, item_codes.
+    """
+    ciks = source.get("ciks") or [""]
+    cik_padded = ciks[0]
+    cik = cik_padded.lstrip("0")
+
+    accession = source.get("adsh", "")
+    accession_nodash = accession.replace("-", "")
+
+    # "Worthington Steel, Inc.  (WS)  (CIK 0001968487)" → name + ticker
+    display = (source.get("display_names") or [""])[0]
+    company_name = display.split("  (")[0].strip()
+    ticker = ""
+    if "  (" in display:
+        first_paren = display.split("  (")[1].split(")")[0]
+        if not first_paren.startswith("CIK"):
+            ticker = first_paren.split(",")[0].strip()
+
+    file_nums = source.get("file_num") or [""]
+
+    return {
+        "accession_number": accession,
+        "cik": cik,
+        "company_name": company_name,
+        "ticker": ticker,
+        "form_type": source.get("form", requested_form),
+        "filed_date": source.get("file_date", ""),
+        "file_url": (
+            f"https://www.sec.gov/Archives/edgar/data/"
+            f"{cik}/{accession_nodash}/{accession}.txt"
+        ),
+        "file_number": file_nums[0],
+        "item_codes": source.get("items", []),
+    }
 
 
 async def fetch_recent_filings_rss(form_type: str = "8-K", limit: int = 40) -> list[dict]:
@@ -182,11 +232,13 @@ async def fetch_filing_document(accession_number: str, cik: str) -> str:
     Returns:
         Raw filing text (HTML/XML/SGML).
     """
-    cik_clean = _normalize_cik(cik)
+    # Archives paths use the UNPADDED CIK — the zero-padded form 301s,
+    # and we don't follow redirects, so padding broke every fetch.
+    cik_clean = cik.lstrip("0") or "0"
     accession_clean = accession_number.replace("-", "")
     url = f"{EDGAR_ARCHIVES_URL}/{cik_clean}/{accession_clean}/{accession_number}.txt"
 
-    async with httpx.AsyncClient(headers=HEADERS, timeout=60.0) as client:
+    async with httpx.AsyncClient(headers=HEADERS, timeout=60.0, follow_redirects=True) as client:
         resp = await _throttled_get(client, url)
 
     logger.info("Fetched filing %s for CIK %s (%d bytes)", accession_number, cik, len(resp.text))
