@@ -1,0 +1,42 @@
+{
+ "target": "|abn_1d| >= 2.0%",
+ "train_base_rate_table": {
+  "2.02": 0.675,
+  "7.01": 0.318,
+  "8.01/1.01": 0.168,
+  "other": 0.195
+ },
+ "logistic_weights": {
+  "bias": -1.167,
+  "2.02": 1.7975,
+  "7.01": 0.0992,
+  "8.01": -0.6371,
+  "1.01": -0.079,
+  "5.02": -0.4126,
+  "5.07": -0.1059,
+  "9.01": 0.1998,
+  "trailing_vol_z": 0.3963,
+  "after_hours": 0.0167
+ },
+ "test_base_rate_table": {
+  "brier": 0.2161,
+  "log_loss": 0.6298,
+  "ece_10bin": 0.0927,
+  "auc": 0.692,
+  "base_positive_rate": 0.441,
+  "n": 338
+ },
+ "test_logistic": {
+  "brier": 0.2095,
+  "log_loss": 0.614,
+  "ece_10bin": 0.0854,
+  "auc": 0.727,
+  "base_positive_rate": 0.441,
+  "n": 338
+ },
+ "vol_standardization": {
+  "train_mean": 2.0636,
+  "train_sd": 1.3078,
+  "note": "trailing 20-session realized vol (%), z-scored with these train stats"
+ }
+}

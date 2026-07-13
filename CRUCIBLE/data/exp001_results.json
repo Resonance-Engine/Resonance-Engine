@@ -1,0 +1,916 @@
+{
+  "summary": {
+    "n_scored": 100,
+    "n_missing_data": 0,
+    "missing": [],
+    "sign_agreement": 0.51,
+    "sign_agreement_big_moves": 0.578,
+    "n_big_moves": 45,
+    "pearson_magnitude_corr": 0.058,
+    "spearman_magnitude_corr": 0.055,
+    "mean_abs_labeled": 3.32,
+    "mean_abs_real": 2.56
+  },
+  "per_event": [
+    {
+      "event_id": "lt_001",
+      "ticker": "AAPL",
+      "date": "2026-01-30",
+      "window": "4h",
+      "labeled_move": 1.9,
+      "labeled_direction": "positive",
+      "real_move": 0.46
+    },
+    {
+      "event_id": "lt_002",
+      "ticker": "MSFT",
+      "date": "2026-01-28",
+      "window": "4h",
+      "labeled_move": 2.3,
+      "labeled_direction": "positive",
+      "real_move": 0.22
+    },
+    {
+      "event_id": "lt_003",
+      "ticker": "GOOGL",
+      "date": "2026-02-04",
+      "window": "4h",
+      "labeled_move": 3.1,
+      "labeled_direction": "positive",
+      "real_move": -1.96
+    },
+    {
+      "event_id": "lt_004",
+      "ticker": "AMZN",
+      "date": "2026-02-06",
+      "window": "4h",
+      "labeled_move": -1.2,
+      "labeled_direction": "negative",
+      "real_move": -5.55
+    },
+    {
+      "event_id": "lt_005",
+      "ticker": "META",
+      "date": "2026-01-29",
+      "window": "4h",
+      "labeled_move": 4.8,
+      "labeled_direction": "positive",
+      "real_move": 10.4
+    },
+    {
+      "event_id": "lt_006",
+      "ticker": "TSLA",
+      "date": "2026-01-29",
+      "window": "4h",
+      "labeled_move": -5.4,
+      "labeled_direction": "negative",
+      "real_move": -3.45
+    },
+    {
+      "event_id": "lt_007",
+      "ticker": "NVDA",
+      "date": "2026-02-26",
+      "window": "4h",
+      "labeled_move": -2.8,
+      "labeled_direction": "negative",
+      "real_move": -5.46
+    },
+    {
+      "event_id": "lt_008",
+      "ticker": "NFLX",
+      "date": "2026-01-21",
+      "window": "4h",
+      "labeled_move": 6.2,
+      "labeled_direction": "positive",
+      "real_move": -2.18
+    },
+    {
+      "event_id": "lt_009",
+      "ticker": "JPM",
+      "date": "2026-01-15",
+      "window": "4h",
+      "labeled_move": 1.7,
+      "labeled_direction": "positive",
+      "real_move": 0.45
+    },
+    {
+      "event_id": "lt_010",
+      "ticker": "BAC",
+      "date": "2026-01-16",
+      "window": "4h",
+      "labeled_move": 2.1,
+      "labeled_direction": "positive",
+      "real_move": 0.72
+    },
+    {
+      "event_id": "lt_011",
+      "ticker": "UNH",
+      "date": "2026-01-16",
+      "window": "4h",
+      "labeled_move": -3.2,
+      "labeled_direction": "negative",
+      "real_move": -2.34
+    },
+    {
+      "event_id": "lt_012",
+      "ticker": "CRM",
+      "date": "2025-12-03",
+      "window": "4h",
+      "labeled_move": 2.0,
+      "labeled_direction": "positive",
+      "real_move": 1.71
+    },
+    {
+      "event_id": "lt_013",
+      "ticker": "WMT",
+      "date": "2025-11-19",
+      "window": "4h",
+      "labeled_move": 3.0,
+      "labeled_direction": "positive",
+      "real_move": -0.77
+    },
+    {
+      "event_id": "lt_014",
+      "ticker": "TGT",
+      "date": "2025-11-20",
+      "window": "4h",
+      "labeled_move": -8.1,
+      "labeled_direction": "negative",
+      "real_move": -2.79
+    },
+    {
+      "event_id": "lt_015",
+      "ticker": "COST",
+      "date": "2025-12-12",
+      "window": "4h",
+      "labeled_move": 0.8,
+      "labeled_direction": "positive",
+      "real_move": -0.0
+    },
+    {
+      "event_id": "lt_016",
+      "ticker": "SNAP",
+      "date": "2026-03-15",
+      "window": "4h",
+      "labeled_move": -2.0,
+      "labeled_direction": "negative",
+      "real_move": 2.63
+    },
+    {
+      "event_id": "lt_017",
+      "ticker": "PLTR",
+      "date": "2026-02-10",
+      "window": "4h",
+      "labeled_move": 5.2,
+      "labeled_direction": "positive",
+      "real_move": -2.38
+    },
+    {
+      "event_id": "lt_018",
+      "ticker": "DIS",
+      "date": "2026-02-05",
+      "window": "4h",
+      "labeled_move": 1.5,
+      "labeled_direction": "positive",
+      "real_move": -1.94
+    },
+    {
+      "event_id": "lt_019",
+      "ticker": "INTC",
+      "date": "2026-01-30",
+      "window": "4h",
+      "labeled_move": -6.3,
+      "labeled_direction": "negative",
+      "real_move": -4.5
+    },
+    {
+      "event_id": "lt_020",
+      "ticker": "AMD",
+      "date": "2026-02-04",
+      "window": "4h",
+      "labeled_move": -1.5,
+      "labeled_direction": "negative",
+      "real_move": -17.31
+    },
+    {
+      "event_id": "lt_021",
+      "ticker": "LLY",
+      "date": "2026-01-08",
+      "window": "24h",
+      "labeled_move": 4.2,
+      "labeled_direction": "positive",
+      "real_move": -2.07
+    },
+    {
+      "event_id": "lt_022",
+      "ticker": "PFE",
+      "date": "2026-02-12",
+      "window": "24h",
+      "labeled_move": 2.8,
+      "labeled_direction": "positive",
+      "real_move": -0.94
+    },
+    {
+      "event_id": "lt_023",
+      "ticker": "MRNA",
+      "date": "2026-03-01",
+      "window": "24h",
+      "labeled_move": 8.5,
+      "labeled_direction": "positive",
+      "real_move": -1.35
+    },
+    {
+      "event_id": "lt_024",
+      "ticker": "ABBV",
+      "date": "2026-02-20",
+      "window": "24h",
+      "labeled_move": -4.1,
+      "labeled_direction": "negative",
+      "real_move": 0.21
+    },
+    {
+      "event_id": "lt_025",
+      "ticker": "JNJ",
+      "date": "2026-01-22",
+      "window": "24h",
+      "labeled_move": 1.8,
+      "labeled_direction": "positive",
+      "real_move": 0.22
+    },
+    {
+      "event_id": "lt_026",
+      "ticker": "AVGO",
+      "date": "2026-01-15",
+      "window": "1w",
+      "labeled_move": 2.4,
+      "labeled_direction": "positive",
+      "real_move": -4.24
+    },
+    {
+      "event_id": "lt_027",
+      "ticker": "ADBE",
+      "date": "2025-12-18",
+      "window": "1w",
+      "labeled_move": 3.5,
+      "labeled_direction": "positive",
+      "real_move": -0.47
+    },
+    {
+      "event_id": "lt_028",
+      "ticker": "CSCO",
+      "date": "2026-03-18",
+      "window": "1w",
+      "labeled_move": -0.5,
+      "labeled_direction": "negative",
+      "real_move": 2.01
+    },
+    {
+      "event_id": "lt_029",
+      "ticker": "UBER",
+      "date": "2026-02-25",
+      "window": "1w",
+      "labeled_move": -2.1,
+      "labeled_direction": "negative",
+      "real_move": 6.98
+    },
+    {
+      "event_id": "lt_030",
+      "ticker": "GS",
+      "date": "2026-01-22",
+      "window": "1w",
+      "labeled_move": 1.8,
+      "labeled_direction": "positive",
+      "real_move": -1.7
+    },
+    {
+      "event_id": "lt_031",
+      "ticker": "TSLA",
+      "date": "2026-03-05",
+      "window": "24h",
+      "labeled_move": -3.8,
+      "labeled_direction": "negative",
+      "real_move": -0.1
+    },
+    {
+      "event_id": "lt_032",
+      "ticker": "INTC",
+      "date": "2025-12-02",
+      "window": "24h",
+      "labeled_move": -5.5,
+      "labeled_direction": "negative",
+      "real_move": 8.65
+    },
+    {
+      "event_id": "lt_033",
+      "ticker": "NKE",
+      "date": "2025-09-20",
+      "window": "24h",
+      "labeled_move": 7.5,
+      "labeled_direction": "positive",
+      "real_move": 0.55
+    },
+    {
+      "event_id": "lt_034",
+      "ticker": "SBUX",
+      "date": "2025-08-13",
+      "window": "24h",
+      "labeled_move": 12.5,
+      "labeled_direction": "positive",
+      "real_move": 0.87
+    },
+    {
+      "event_id": "lt_035",
+      "ticker": "BA",
+      "date": "2026-03-25",
+      "window": "24h",
+      "labeled_move": -2.8,
+      "labeled_direction": "negative",
+      "real_move": 1.62
+    },
+    {
+      "event_id": "lt_036",
+      "ticker": "TSLA",
+      "date": "2026-01-10",
+      "window": "4h",
+      "labeled_move": -3.2,
+      "labeled_direction": "negative",
+      "real_move": 0.89
+    },
+    {
+      "event_id": "lt_037",
+      "ticker": "NVDA",
+      "date": "2026-02-15",
+      "window": "4h",
+      "labeled_move": -0.8,
+      "labeled_direction": "negative",
+      "real_move": 1.18
+    },
+    {
+      "event_id": "lt_038",
+      "ticker": "JPM",
+      "date": "2026-02-22",
+      "window": "4h",
+      "labeled_move": -1.5,
+      "labeled_direction": "negative",
+      "real_move": -4.22
+    },
+    {
+      "event_id": "lt_039",
+      "ticker": "AAPL",
+      "date": "2026-05-01",
+      "window": "4h",
+      "labeled_move": 2.8,
+      "labeled_direction": "positive",
+      "real_move": 3.24
+    },
+    {
+      "event_id": "lt_040",
+      "ticker": "GOOGL",
+      "date": "2026-04-25",
+      "window": "4h",
+      "labeled_move": 5.5,
+      "labeled_direction": "positive",
+      "real_move": 1.72
+    },
+    {
+      "event_id": "lt_041",
+      "ticker": "META",
+      "date": "2026-02-01",
+      "window": "4h",
+      "labeled_move": 1.2,
+      "labeled_direction": "positive",
+      "real_move": -1.41
+    },
+    {
+      "event_id": "lt_042",
+      "ticker": "DIS",
+      "date": "2026-02-08",
+      "window": "1w",
+      "labeled_move": 3.2,
+      "labeled_direction": "positive",
+      "real_move": -2.99
+    },
+    {
+      "event_id": "lt_043",
+      "ticker": "PFE",
+      "date": "2026-01-20",
+      "window": "1w",
+      "labeled_move": 1.3,
+      "labeled_direction": "positive",
+      "real_move": 0.9
+    },
+    {
+      "event_id": "lt_044",
+      "ticker": "INTC",
+      "date": "2026-01-02",
+      "window": "1w",
+      "labeled_move": -8.2,
+      "labeled_direction": "negative",
+      "real_move": 11.41
+    },
+    {
+      "event_id": "lt_045",
+      "ticker": "TGT",
+      "date": "2025-11-20",
+      "window": "4h",
+      "labeled_move": -5.2,
+      "labeled_direction": "negative",
+      "real_move": -2.79
+    },
+    {
+      "event_id": "lt_046",
+      "ticker": "MSFT",
+      "date": "2026-01-29",
+      "window": "4h",
+      "labeled_move": 2.8,
+      "labeled_direction": "positive",
+      "real_move": -9.99
+    },
+    {
+      "event_id": "lt_047",
+      "ticker": "AMZN",
+      "date": "2026-02-06",
+      "window": "4h",
+      "labeled_move": -4.1,
+      "labeled_direction": "negative",
+      "real_move": -5.55
+    },
+    {
+      "event_id": "lt_048",
+      "ticker": "CAT",
+      "date": "2026-01-31",
+      "window": "4h",
+      "labeled_move": -3.5,
+      "labeled_direction": "negative",
+      "real_move": 5.1
+    },
+    {
+      "event_id": "lt_049",
+      "ticker": "V",
+      "date": "2026-01-28",
+      "window": "4h",
+      "labeled_move": 1.5,
+      "labeled_direction": "positive",
+      "real_move": 0.53
+    },
+    {
+      "event_id": "lt_050",
+      "ticker": "MA",
+      "date": "2026-01-30",
+      "window": "4h",
+      "labeled_move": 2.2,
+      "labeled_direction": "positive",
+      "real_move": -0.91
+    },
+    {
+      "event_id": "lt_051",
+      "ticker": "GS",
+      "date": "2026-01-15",
+      "window": "4h",
+      "labeled_move": 3.8,
+      "labeled_direction": "positive",
+      "real_move": 4.63
+    },
+    {
+      "event_id": "lt_052",
+      "ticker": "MS",
+      "date": "2026-01-16",
+      "window": "4h",
+      "labeled_move": 2.4,
+      "labeled_direction": "positive",
+      "real_move": -1.12
+    },
+    {
+      "event_id": "lt_053",
+      "ticker": "CVX",
+      "date": "2026-01-31",
+      "window": "4h",
+      "labeled_move": 0.8,
+      "labeled_direction": "positive",
+      "real_move": -1.62
+    },
+    {
+      "event_id": "lt_054",
+      "ticker": "XOM",
+      "date": "2026-01-31",
+      "window": "4h",
+      "labeled_move": 1.2,
+      "labeled_direction": "positive",
+      "real_move": -2.12
+    },
+    {
+      "event_id": "lt_055",
+      "ticker": "PG",
+      "date": "2026-01-22",
+      "window": "4h",
+      "labeled_move": 0.5,
+      "labeled_direction": "positive",
+      "real_move": 2.65
+    },
+    {
+      "event_id": "lt_056",
+      "ticker": "HD",
+      "date": "2026-02-25",
+      "window": "4h",
+      "labeled_move": -2.5,
+      "labeled_direction": "negative",
+      "real_move": -2.32
+    },
+    {
+      "event_id": "lt_057",
+      "ticker": "MCD",
+      "date": "2026-02-10",
+      "window": "4h",
+      "labeled_move": 1.0,
+      "labeled_direction": "positive",
+      "real_move": 0.11
+    },
+    {
+      "event_id": "lt_058",
+      "ticker": "NKE",
+      "date": "2025-12-19",
+      "window": "4h",
+      "labeled_move": -6.0,
+      "labeled_direction": "negative",
+      "real_move": -10.54
+    },
+    {
+      "event_id": "lt_059",
+      "ticker": "BRK-B",
+      "date": "2026-02-22",
+      "window": "4h",
+      "labeled_move": 0.8,
+      "labeled_direction": "positive",
+      "real_move": -0.82
+    },
+    {
+      "event_id": "lt_060",
+      "ticker": "SCHW",
+      "date": "2026-01-21",
+      "window": "4h",
+      "labeled_move": 1.8,
+      "labeled_direction": "positive",
+      "real_move": 0.79
+    },
+    {
+      "event_id": "lt_061",
+      "ticker": "TSM",
+      "date": "2026-01-16",
+      "window": "4h",
+      "labeled_move": 2.9,
+      "labeled_direction": "positive",
+      "real_move": 0.22
+    },
+    {
+      "event_id": "lt_062",
+      "ticker": "QCOM",
+      "date": "2026-02-05",
+      "window": "4h",
+      "labeled_move": 3.5,
+      "labeled_direction": "positive",
+      "real_move": -8.46
+    },
+    {
+      "event_id": "lt_063",
+      "ticker": "NEE",
+      "date": "2026-01-24",
+      "window": "4h",
+      "labeled_move": -2.5,
+      "labeled_direction": "negative",
+      "real_move": 0.78
+    },
+    {
+      "event_id": "lt_064",
+      "ticker": "AAPL",
+      "date": "2026-03-01",
+      "window": "24h",
+      "labeled_move": 1.2,
+      "labeled_direction": "positive",
+      "real_move": 0.2
+    },
+    {
+      "event_id": "lt_065",
+      "ticker": "GOOGL",
+      "date": "2026-02-15",
+      "window": "24h",
+      "labeled_move": 3.2,
+      "labeled_direction": "positive",
+      "real_move": -1.21
+    },
+    {
+      "event_id": "lt_066",
+      "ticker": "TSLA",
+      "date": "2026-03-10",
+      "window": "24h",
+      "labeled_move": 8.5,
+      "labeled_direction": "positive",
+      "real_move": 0.14
+    },
+    {
+      "event_id": "lt_067",
+      "ticker": "AMZN",
+      "date": "2026-02-20",
+      "window": "24h",
+      "labeled_move": 1.5,
+      "labeled_direction": "positive",
+      "real_move": 2.56
+    },
+    {
+      "event_id": "lt_068",
+      "ticker": "META",
+      "date": "2026-03-15",
+      "window": "24h",
+      "labeled_move": -2.5,
+      "labeled_direction": "negative",
+      "real_move": 2.24
+    },
+    {
+      "event_id": "lt_069",
+      "ticker": "GOOGL",
+      "date": "2026-01-12",
+      "window": "24h",
+      "labeled_move": -4.8,
+      "labeled_direction": "negative",
+      "real_move": 1.0
+    },
+    {
+      "event_id": "lt_070",
+      "ticker": "AAPL",
+      "date": "2026-03-06",
+      "window": "24h",
+      "labeled_move": -1.5,
+      "labeled_direction": "negative",
+      "real_move": -1.09
+    },
+    {
+      "event_id": "lt_071",
+      "ticker": "UNH",
+      "date": "2026-02-28",
+      "window": "24h",
+      "labeled_move": -7.2,
+      "labeled_direction": "negative",
+      "real_move": 0.57
+    },
+    {
+      "event_id": "lt_072",
+      "ticker": "BA",
+      "date": "2026-01-06",
+      "window": "24h",
+      "labeled_move": -8.0,
+      "labeled_direction": "negative",
+      "real_move": 0.75
+    },
+    {
+      "event_id": "lt_073",
+      "ticker": "JNJ",
+      "date": "2026-02-01",
+      "window": "1w",
+      "labeled_move": 2.5,
+      "labeled_direction": "positive",
+      "real_move": 5.61
+    },
+    {
+      "event_id": "lt_074",
+      "ticker": "NVDA",
+      "date": "2026-01-15",
+      "window": "24h",
+      "labeled_move": -5.5,
+      "labeled_direction": "negative",
+      "real_move": 2.13
+    },
+    {
+      "event_id": "lt_075",
+      "ticker": "AMD",
+      "date": "2026-03-20",
+      "window": "24h",
+      "labeled_move": 4.2,
+      "labeled_direction": "positive",
+      "real_move": -1.92
+    },
+    {
+      "event_id": "lt_076",
+      "ticker": "CRM",
+      "date": "2026-02-10",
+      "window": "24h",
+      "labeled_move": 2.8,
+      "labeled_direction": "positive",
+      "real_move": -0.3
+    },
+    {
+      "event_id": "lt_077",
+      "ticker": "WMT",
+      "date": "2026-01-30",
+      "window": "24h",
+      "labeled_move": 1.8,
+      "labeled_direction": "positive",
+      "real_move": 1.47
+    },
+    {
+      "event_id": "lt_078",
+      "ticker": "COST",
+      "date": "2026-01-08",
+      "window": "4h",
+      "labeled_move": 2.2,
+      "labeled_direction": "positive",
+      "real_move": 3.71
+    },
+    {
+      "event_id": "lt_079",
+      "ticker": "DIS",
+      "date": "2026-02-12",
+      "window": "24h",
+      "labeled_move": -3.5,
+      "labeled_direction": "negative",
+      "real_move": -5.31
+    },
+    {
+      "event_id": "lt_080",
+      "ticker": "NFLX",
+      "date": "2026-01-08",
+      "window": "24h",
+      "labeled_move": 3.5,
+      "labeled_direction": "positive",
+      "real_move": -0.22
+    },
+    {
+      "event_id": "lt_081",
+      "ticker": "MSFT",
+      "date": "2026-01-10",
+      "window": "24h",
+      "labeled_move": 1.8,
+      "labeled_direction": "positive",
+      "real_move": -0.44
+    },
+    {
+      "event_id": "lt_082",
+      "ticker": "AVGO",
+      "date": "2026-03-06",
+      "window": "4h",
+      "labeled_move": 3.0,
+      "labeled_direction": "positive",
+      "real_move": -0.69
+    },
+    {
+      "event_id": "lt_083",
+      "ticker": "LLY",
+      "date": "2026-02-06",
+      "window": "4h",
+      "labeled_move": 5.2,
+      "labeled_direction": "positive",
+      "real_move": 3.66
+    },
+    {
+      "event_id": "lt_084",
+      "ticker": "ABBV",
+      "date": "2026-02-07",
+      "window": "4h",
+      "labeled_move": 1.5,
+      "labeled_direction": "positive",
+      "real_move": -0.08
+    },
+    {
+      "event_id": "lt_085",
+      "ticker": "PFE",
+      "date": "2026-01-28",
+      "window": "4h",
+      "labeled_move": -1.8,
+      "labeled_direction": "negative",
+      "real_move": -2.42
+    },
+    {
+      "event_id": "lt_086",
+      "ticker": "BA",
+      "date": "2026-01-29",
+      "window": "4h",
+      "labeled_move": -4.5,
+      "labeled_direction": "negative",
+      "real_move": -3.13
+    },
+    {
+      "event_id": "lt_087",
+      "ticker": "GS",
+      "date": "2026-02-25",
+      "window": "4h",
+      "labeled_move": 2.2,
+      "labeled_direction": "positive",
+      "real_move": 2.12
+    },
+    {
+      "event_id": "lt_088",
+      "ticker": "NVDA",
+      "date": "2026-03-18",
+      "window": "24h",
+      "labeled_move": 5.0,
+      "labeled_direction": "positive",
+      "real_move": -0.84
+    },
+    {
+      "event_id": "lt_089",
+      "ticker": "META",
+      "date": "2026-04-01",
+      "window": "24h",
+      "labeled_move": 3.5,
+      "labeled_direction": "positive",
+      "real_move": 1.24
+    },
+    {
+      "event_id": "lt_090",
+      "ticker": "TSLA",
+      "date": "2026-03-22",
+      "window": "24h",
+      "labeled_move": -4.8,
+      "labeled_direction": "negative",
+      "real_move": 3.5
+    },
+    {
+      "event_id": "lt_091",
+      "ticker": "AMZN",
+      "date": "2026-04-30",
+      "window": "4h",
+      "labeled_move": 3.8,
+      "labeled_direction": "positive",
+      "real_move": 0.77
+    },
+    {
+      "event_id": "lt_092",
+      "ticker": "MSFT",
+      "date": "2026-04-22",
+      "window": "4h",
+      "labeled_move": 2.0,
+      "labeled_direction": "positive",
+      "real_move": 2.07
+    },
+    {
+      "event_id": "lt_093",
+      "ticker": "GOOGL",
+      "date": "2026-04-24",
+      "window": "4h",
+      "labeled_move": 2.5,
+      "labeled_direction": "positive",
+      "real_move": 1.63
+    },
+    {
+      "event_id": "lt_094",
+      "ticker": "META",
+      "date": "2026-04-23",
+      "window": "4h",
+      "labeled_move": 4.0,
+      "labeled_direction": "positive",
+      "real_move": -2.31
+    },
+    {
+      "event_id": "lt_095",
+      "ticker": "AAPL",
+      "date": "2026-05-01",
+      "window": "4h",
+      "labeled_move": -0.5,
+      "labeled_direction": "negative",
+      "real_move": 3.24
+    },
+    {
+      "event_id": "lt_096",
+      "ticker": "TSLA",
+      "date": "2026-04-23",
+      "window": "4h",
+      "labeled_move": -9.5,
+      "labeled_direction": "negative",
+      "real_move": -3.56
+    },
+    {
+      "event_id": "lt_097",
+      "ticker": "NVDA",
+      "date": "2026-05-28",
+      "window": "4h",
+      "labeled_move": 1.5,
+      "labeled_direction": "positive",
+      "real_move": 0.78
+    },
+    {
+      "event_id": "lt_098",
+      "ticker": "JPM",
+      "date": "2026-04-11",
+      "window": "4h",
+      "labeled_move": 1.2,
+      "labeled_direction": "positive",
+      "real_move": 1.23
+    },
+    {
+      "event_id": "lt_099",
+      "ticker": "BAC",
+      "date": "2026-04-15",
+      "window": "4h",
+      "labeled_move": 2.5,
+      "labeled_direction": "positive",
+      "real_move": 1.82
+    },
+    {
+      "event_id": "lt_100",
+      "ticker": "WMT",
+      "date": "2026-02-20",
+      "window": "4h",
+      "labeled_move": 1.0,
+      "labeled_direction": "positive",
+      "real_move": -1.51
+    }
+  ]
+}

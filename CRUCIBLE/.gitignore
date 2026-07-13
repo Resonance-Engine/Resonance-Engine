@@ -1,0 +1,6 @@
+# Regenerable download caches (rebuilt by the experiments that use them) —
+# ~42MB total, not worth versioning. The derived datasets and results ARE
+# committed: real_labeled_8k_set.json, exp00*_results.json.
+data/edgar_submissions/
+data/filing_texts/
+data/yahoo/
