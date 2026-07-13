@@ -45,7 +45,7 @@ async def upsert_entity(entity: Entity, session: AsyncSession | None = None) -> 
     """
     row_data = _entity_to_row(entity)
 
-    async def _do_upsert(sess: AsyncSession) -> None:
+    async def _do_upsert(sess: AsyncSession, own_session: bool) -> None:
         stmt = (
             pg_insert(EntityModel)
             .values(**row_data)
@@ -60,14 +60,18 @@ async def upsert_entity(entity: Entity, session: AsyncSession | None = None) -> 
             )
         )
         await sess.execute(stmt)
-        await sess.commit()
+        if own_session:
+            await sess.commit()
+        else:
+            # Caller owns the transaction — flush, don't commit
+            await sess.flush()
         logger.info("Upserted entity %s (%s)", entity.ticker, entity.name)
 
     if session is not None:
-        await _do_upsert(session)
+        await _do_upsert(session, own_session=False)
     else:
         async with async_session() as sess:
-            await _do_upsert(sess)
+            await _do_upsert(sess, own_session=True)
 
 
 async def get_entity(ticker: str, session: AsyncSession | None = None) -> Entity | None:

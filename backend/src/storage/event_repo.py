@@ -57,19 +57,24 @@ async def insert_event(event: Event, session: AsyncSession | None = None) -> Non
     """
     row_data = _event_to_row(event)
 
-    async def _do_insert(sess: AsyncSession) -> None:
+    async def _do_insert(sess: AsyncSession, own_session: bool) -> None:
         stmt = pg_insert(EventModel).values(**row_data).on_conflict_do_nothing(
             index_elements=["event_id"]
         )
         await sess.execute(stmt)
-        await sess.commit()
+        if own_session:
+            await sess.commit()
+        else:
+            # Caller owns the transaction — committing here would break
+            # multi-write atomicity (partial commits the caller can't roll back)
+            await sess.flush()
         logger.info("Inserted event %s", event.event_id)
 
     if session is not None:
-        await _do_insert(session)
+        await _do_insert(session, own_session=False)
     else:
         async with async_session() as sess:
-            await _do_insert(sess)
+            await _do_insert(sess, own_session=True)
 
 
 async def get_event(event_id: str, session: AsyncSession | None = None) -> Event | None:

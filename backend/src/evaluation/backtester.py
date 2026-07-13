@@ -103,15 +103,24 @@ def check_survivorship_bias(tickers: list[str], delisted_tickers: set[str]) -> d
 
 def probability_of_backtest_overfitting(
     performance_matrix: list[list[float]],
+    n_partitions: int = 8,
 ) -> float:
     """Bailey et al. (2014) Probability of Backtest Overfitting (PBO).
 
-    Combinatorially Symmetric Cross-Validation (CSCV) approach:
-    1. Split N time periods into S partitions
-    2. For each combination of in-sample/out-of-sample splits:
-       - Find the best strategy in-sample
-       - Check if it underperforms median out-of-sample
-    3. PBO = fraction of combinations where in-sample winner underperforms OOS
+    Combinatorially Symmetric Cross-Validation (CSCV), the actual method:
+    1. Split the N time periods into S contiguous blocks (S even).
+    2. For EVERY combination of S/2 blocks as in-sample (C(S, S/2)
+       combinations — the "combinatorially symmetric" part), the remaining
+       S/2 blocks are out-of-sample.
+    3. In each combination: pick the best strategy in-sample, then compute
+       its out-of-sample RANK among all strategies.
+    4. PBO = fraction of combinations where the in-sample winner ranks in
+       the bottom half out-of-sample (relative rank ω <= 0.5, i.e.
+       logit λ = ln(ω/(1−ω)) <= 0).
+
+    NOTE: an earlier version used contiguous sliding half-splits (a handful
+    of trials instead of C(S, S/2)) — a statistically weak estimate that
+    let overfit strategies pass the deploy gate.
 
     Interpretation:
     - PBO < 0.25: Robust strategy
@@ -121,6 +130,8 @@ def probability_of_backtest_overfitting(
     Args:
         performance_matrix: Matrix of shape [n_strategies, n_periods].
             Each row is a strategy, each column is a time period's return.
+        n_partitions: Number of blocks S (even, >= 2). Clamped so each
+            block has at least one period. Default 8 → C(8,4)=70 trials.
 
     Returns:
         PBO estimate in [0.0, 1.0].
@@ -128,6 +139,8 @@ def probability_of_backtest_overfitting(
     Raises:
         ValueError: If matrix is empty or has fewer than 4 periods.
     """
+    from itertools import combinations
+
     if not performance_matrix or not performance_matrix[0]:
         raise ValueError("Performance matrix cannot be empty")
 
@@ -144,36 +157,44 @@ def probability_of_backtest_overfitting(
         if len(row) != n_periods:
             raise ValueError("All strategies must have the same number of periods")
 
-    # Use half-split CSCV: split periods into two halves
-    # Try all contiguous half-splits (sliding window)
-    half = n_periods // 2
+    # S contiguous blocks of (near-)equal size; S even, each block non-empty.
+    s = min(n_partitions, n_periods)
+    if s % 2 == 1:
+        s -= 1
+    s = max(s, 2)
+
+    block_size = n_periods // s
+    blocks: list[list[int]] = []
+    for b in range(s):
+        start = b * block_size
+        end = (b + 1) * block_size if b < s - 1 else n_periods  # last takes remainder
+        blocks.append(list(range(start, end)))
+
+    def _mean_over(strat: list[float], indices: list[int]) -> float:
+        return sum(strat[i] for i in indices) / len(indices)
+
     n_overfit = 0
     n_trials = 0
 
-    for start in range(n_periods - half + 1):
-        is_indices = list(range(start, start + half))
-        oos_indices = [i for i in range(n_periods) if i not in is_indices]
+    for is_blocks in combinations(range(s), s // 2):
+        is_set = set(is_blocks)
+        is_indices = [i for b in is_blocks for i in blocks[b]]
+        oos_indices = [i for b in range(s) if b not in is_set for i in blocks[b]]
 
-        if not oos_indices:
-            continue
+        is_perfs = [_mean_over(strat, is_indices) for strat in performance_matrix]
+        oos_perfs = [_mean_over(strat, oos_indices) for strat in performance_matrix]
 
-        # Compute in-sample and out-of-sample performance for each strategy
-        is_perfs = []
-        oos_perfs = []
-        for strat in performance_matrix:
-            is_perf = sum(strat[i] for i in is_indices) / len(is_indices)
-            oos_perf = sum(strat[i] for i in oos_indices) / len(oos_indices)
-            is_perfs.append(is_perf)
-            oos_perfs.append(oos_perf)
-
-        # Find the best in-sample strategy
         best_is_idx = max(range(n_strategies), key=lambda i: is_perfs[i])
 
-        # Check if it underperforms median out-of-sample
-        sorted_oos = sorted(oos_perfs)
-        median_oos = sorted_oos[len(sorted_oos) // 2]
+        # Relative OOS rank of the in-sample winner: ω in (0, 1)
+        rank = 1 + sum(
+            1 for i in range(n_strategies)
+            if i != best_is_idx and oos_perfs[i] < oos_perfs[best_is_idx]
+        )
+        omega = rank / (n_strategies + 1)
 
-        if oos_perfs[best_is_idx] < median_oos:
+        # λ = ln(ω/(1−ω)) <= 0  ⇔  ω <= 0.5  (bottom half OOS)
+        if omega <= 0.5:
             n_overfit += 1
         n_trials += 1
 

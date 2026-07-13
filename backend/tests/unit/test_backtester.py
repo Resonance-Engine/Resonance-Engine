@@ -138,3 +138,40 @@ def test_run_bias_checks_clean():
     report = run_bias_checks(signals, tickers, delisted)
     assert report.is_clean is True
     assert len(report.look_ahead_violations) == 0
+
+
+# --- CSCV combinatorial behavior (Bailey et al. 2014) ---
+
+def test_pbo_dominant_strategy_is_zero():
+    """A strategy that wins in EVERY period must have PBO = 0 under real
+    CSCV — the in-sample winner always ranks top out-of-sample."""
+    matrix = [
+        [0.10] * 16,
+        [0.01] * 16,
+        [0.02] * 16,
+    ]
+    assert probability_of_backtest_overfitting(matrix) == 0.0
+
+
+def test_pbo_pure_noise_is_high():
+    """With antisymmetric noise (each strategy's IS win implies OOS loss),
+    the in-sample winner should usually rank bottom-half OOS.
+
+    The old sliding-half-split version produced very few trials and a
+    biased estimate; combinatorial CSCV over C(8,4)=70 trials catches it."""
+    import random
+    rng = random.Random(42)
+    # Strategies with zero-mean returns, independent across periods
+    matrix = [[rng.gauss(0, 1) for _ in range(16)] for _ in range(10)]
+    pbo = probability_of_backtest_overfitting(matrix)
+    assert pbo >= 0.3  # noise → selection is not predictive OOS
+
+
+def test_pbo_uses_combinatorial_trials():
+    """8 partitions → C(8,4) = 70 trials, exercised without error on a
+    non-divisible period count (17 periods → last block takes remainder)."""
+    matrix = [
+        [0.1] * 17,
+        [0.05] * 17,
+    ]
+    assert probability_of_backtest_overfitting(matrix, n_partitions=8) == 0.0

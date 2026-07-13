@@ -74,19 +74,23 @@ async def insert_signal(signal: Signal, session: AsyncSession | None = None) -> 
     """
     row_data = _signal_to_row(signal)
 
-    async def _do_insert(sess: AsyncSession) -> None:
+    async def _do_insert(sess: AsyncSession, own_session: bool) -> None:
         stmt = pg_insert(SignalModel).values(**row_data).on_conflict_do_nothing(
             index_elements=["signal_id"]
         )
         await sess.execute(stmt)
-        await sess.commit()
+        if own_session:
+            await sess.commit()
+        else:
+            # Caller owns the transaction — flush, don't commit
+            await sess.flush()
         logger.info("Inserted signal %s for ticker %s", signal.signal_id, signal.ticker)
 
     if session is not None:
-        await _do_insert(session)
+        await _do_insert(session, own_session=False)
     else:
         async with async_session() as sess:
-            await _do_insert(sess)
+            await _do_insert(sess, own_session=True)
 
 
 async def get_signal(signal_id: str, session: AsyncSession | None = None) -> Signal | None:
@@ -252,20 +256,24 @@ async def update_actual_move(
     """
     from sqlalchemy import update
 
-    async def _do_update(sess: AsyncSession) -> bool:
+    async def _do_update(sess: AsyncSession, own_session: bool) -> bool:
         stmt = (
             update(SignalModel)
             .where(SignalModel.signal_id == signal_id)
             .values(actual_move=actual_move)
         )
         result = await sess.execute(stmt)
-        await sess.commit()
+        if own_session:
+            await sess.commit()
+        else:
+            # Caller owns the transaction — flush, don't commit
+            await sess.flush()
         updated = result.rowcount > 0
         if updated:
             logger.info("Updated actual_move for signal %s: %.4f", signal_id, actual_move)
         return updated
 
     if session is not None:
-        return await _do_update(session)
+        return await _do_update(session, own_session=False)
     async with async_session() as sess:
-        return await _do_update(sess)
+        return await _do_update(sess, own_session=True)

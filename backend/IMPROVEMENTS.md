@@ -107,13 +107,36 @@ item codes from the response), dedupe-by-accession pagination, unpadded CIK +
 `follow_redirects=True`. Verified live end-to-end: EFTS search → 5 real
 filings (correct tickers/CIKs) → fetched a real 179KB 8-K document. 262→266 tests.
 
+## Second follow-up (2026-07-12 evening): live E2E proof + hardening
+
+**End-to-end proof ran with a REAL filing** (Docker up, Alembic migrated):
+EFTS → ASIC 8-K (items 2.02/5.02/9.01) → fetched → parsed (4 items) → Event
+with `event_type=8k_item_2_02` + 7 resolved entities → full 6-agent pipeline →
+signal approved (WATCH, 42.04% — the fixed zero-evidence formula) → persisted
+to Postgres. **First verified end-to-end signal in the project's history.**
+- ⚠️ Pinecone key returns 401 — the renewed subscription is NOT active yet
+  (or issued a new key that needs to go into `.env`). Evidence layer stays
+  empty until fixed; pipeline degrades gracefully as designed.
+- ⚠️ State contradiction vs memory: `signals` table has **129 rows** (memory
+  said wiped to 0); `events` has 0 — the 129 are orphans from post-wipe runs.
+
+**Hardening implemented same evening:**
+- EDGAR rate limiter: lock + minimum spacing between request starts —
+  serialized, burst-safe under any concurrency (was Semaphore(10) + sleep,
+  ~80 req/s burst potential).
+- Repo transaction boundaries: all write helpers (`insert_event`,
+  `insert_signal`, `update_actual_move`, `upsert_entity`) now commit ONLY
+  sessions they own; caller-supplied sessions get `flush()` so multi-write
+  atomicity is possible.
+- Backtester PBO: real CSCV per Bailey et al. (2014) — S contiguous blocks,
+  all C(S, S/2) in-sample combinations (70 trials at S=8 vs ~5 before),
+  rank-based logit criterion. + 3 behavioral tests.
+
 ## Known issues deliberately NOT addressed (ranked backlog)
 
-1. **EDGAR rate limiter** — `Semaphore(10)` + 0.12s sleep allows ~80 req/s bursts if callers ever go concurrent (currently sequential, so latent). Should be a token bucket or `Semaphore(1)`.
-3. **Repo transaction boundaries** — write helpers `commit()` caller-supplied sessions; atomic multi-write transactions are impossible. Needs `flush`-when-external-session pattern.
-4. **Postgres↔Pinecone orphan risk** — no reconciliation sweep; `reembed_pinecone.py` is manual.
-5. **Backtester PBO** — claims CSCV, implements contiguous sliding half-splits (weak overfitting gate). Needs `itertools.combinations` partitioning. Median also takes upper element for even n.
-6. **QuotaTracker** — in-memory only (per-process; multiple uvicorn workers each get the full quota), racy read-modify-write, `==` threshold warning can be skipped.
+1. **Pinecone key 401** — user action: complete the renewal / update `PINECONE_API_KEY` in `.env`, then prove the RAG evidence loop live.
+2. **Postgres↔Pinecone orphan risk** — no reconciliation sweep; `reembed_pinecone.py` is manual. Also: 129 orphan signal rows (no backing events) from post-wipe runs — decide keep/purge.
+3. **QuotaTracker** — in-memory only (per-process; multiple uvicorn workers each get the full quota), racy read-modify-write, `==` threshold warning can be skipped.
 7. **mypy strict** — 228 errors outstanding; `strict` in pyproject is aspirational.
 8. **Loughran-McDonald negation** — "not profitable" scores positive; hyphenated terms never match.
 9. **SEC ticker cache never expires** — no TTL/refresh; ticker renames/delistings go stale.

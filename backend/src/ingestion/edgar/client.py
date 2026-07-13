@@ -24,16 +24,26 @@ HEADERS = {
     "Accept-Encoding": "gzip, deflate",
 }
 
-# SEC rate limit: 10 req/sec. We use a semaphore + small delay to stay under.
-_rate_semaphore = asyncio.Semaphore(10)
+# SEC rate limit: 10 req/sec (exceeding it earns a ~10-minute IP ban).
+# A lock + minimum spacing between request STARTS serializes callers and
+# caps throughput at ~8 req/s regardless of concurrency. The previous
+# Semaphore(10) + post-request sleep allowed ~80 req/s bursts if callers
+# ever ran concurrently (latent — callers were sequential).
+_rate_lock = asyncio.Lock()
 _MIN_REQUEST_INTERVAL = 0.12  # ~8 req/sec to leave headroom
+_last_request_at = 0.0
 
 
 async def _throttled_get(client: httpx.AsyncClient, url: str, **kwargs) -> httpx.Response:
-    """HTTP GET with rate-limit throttling."""
-    async with _rate_semaphore:
+    """HTTP GET with SEC rate-limit throttling (safe under concurrency)."""
+    global _last_request_at
+    async with _rate_lock:
+        now = asyncio.get_event_loop().time()
+        wait = _last_request_at + _MIN_REQUEST_INTERVAL - now
+        if wait > 0:
+            await asyncio.sleep(wait)
+        _last_request_at = asyncio.get_event_loop().time()
         resp = await client.get(url, **kwargs)
-        await asyncio.sleep(_MIN_REQUEST_INTERVAL)
     resp.raise_for_status()
     return resp
 
