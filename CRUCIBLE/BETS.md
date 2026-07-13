@@ -45,7 +45,24 @@ shipped as **v2 weights in `src/agents/magnitude.py`**. Refit protocol fired
 correctly on its first trigger. Next ceiling: sector/market-cap features,
 1%/5% thresholds, 5-day horizon — beat AUC 0.715 (n=3,616).
 
+## Candidate (not yet active)
+
+### Bet G — Two-tier signals: a high-conviction P(≥5%) alert
+Finding 008 secondary: |abn_1d| ≥ 5% is far more predictable than the shipped
+≥2% target — AUC 0.801 (v2 features) / 0.826 (with sector), ECE ~0.02. A
+rarer, sharper "major impact expected" tier could sit above the current
+signal. Needs fresh pre-registration (bar, gate threshold, rationale text)
+before any wiring. Sector features earn their keep here (gain 2.5× larger
+than at ≥2%).
+
 ## Killed
+
+### ~~Bet F — model ceiling (sector/size/novelty features)~~ (2026-07-13)
+Finding 008: sector was the only feature with signal; at full precision it
+gained +0.00955 AUC vs the pre-registered ≥ +0.010 bar → not shipped, v2
+stands. Size, novelty, item-count, interactions ≈ flat (never need building).
+Secondaries: ≥5% target much stronger (→ Bet G); 5-day horizon weak (AUC
+0.62) — 8-K impact windows stay short; 1% threshold is noise.
 
 ### ~~Bet D — EPS-miss directional alert~~ (2026-07-13)
 Finding 006: pre-registered S&P 500 validation (13,022 events, 350 misses)
