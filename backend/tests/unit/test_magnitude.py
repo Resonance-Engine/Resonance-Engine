@@ -1,8 +1,8 @@
 """Tests for the calibrated magnitude model and its pipeline wiring.
 
-Model provenance: CRUCIBLE Finding 004 (exp004, fit 2026-07-13). Expected
-values below are computed from the published weights, not re-derived from
-the code under test.
+Model provenance: CRUCIBLE Findings 004/007 (v2 weights, exp007, fit
+2026-07-13 on the S&P 500 universe). Expected values below are computed
+from the published weights, not re-derived from the code under test.
 """
 
 import math
@@ -41,14 +41,14 @@ def test_extract_item_codes_empty_when_absent():
 
 
 def test_earnings_filing_probability_matches_published_weights():
-    # bias -1.167 + 2.02 (1.7975) + 9.01 (0.1998) = 0.8303
-    expected = _sigmoid(0.8303)
+    # v2: bias -1.2436 + 2.02 (1.8769) + 9.01 (0.0735) = 0.7068
+    expected = _sigmoid(0.7068)
     assert magnitude_probability(["2.02", "9.01"]) == pytest.approx(expected, abs=1e-6)
     assert expected > 0.65  # earnings filings are likely movers
 
 
 def test_routine_filing_falls_below_risk_gate():
-    # Shareholder vote only: bias -1.167 + 5.07 (-0.1059) → ~0.22
+    # Shareholder vote only: v2 bias -1.2436 + 5.07 (-0.4124) → ~0.16
     p = magnitude_probability(["5.07"])
     assert p < 0.40  # risk gate's rejection line — routine filings get filtered
 

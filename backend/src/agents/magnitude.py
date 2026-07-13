@@ -1,14 +1,18 @@
 """Calibrated magnitude model — P(|market-adjusted move| >= 2%) for an 8-K.
 
 Replaces the hand-set confidence formula for SEC 8-K events with a measured
-probability. Logistic regression fit on 1,022 real 8-K filings (46 large-caps,
-2024-07 → 2026-07) labeled with real SPY-adjusted next-session returns.
-Held-out 2026 performance: Brier 0.210, AUC 0.727, ECE 8.5% — beats both the
-item-code base-rate table (0.216 / 0.692) and an uninformed prior (0.247).
+probability. Logistic regression fit on 12,334 real S&P 500 8-K filings
+(502 tickers, 2024-07 → 2026-07) labeled with real SPY-adjusted next-session
+returns. Held-out 2026 performance (n=3,616): Brier 0.218, AUC 0.715,
+ECE 8.1% — beats the item-code base-rate table and the v1 46-ticker fit.
+v1 (exp004) was validated out-of-universe before this refit: on 11,329
+events from 456 never-seen tickers it still beat the base-rate table
+(exp007), so the refit is an upgrade, not a fix.
 
-Provenance: CRUCIBLE/findings/004-calibrated-magnitude-confidence-works.md,
-weights in CRUCIBLE/data/exp004_results.json, reproducible via
-CRUCIBLE/experiments/exp004_calibrated_magnitude.py. Refit whenever the
+Provenance: CRUCIBLE/findings/004 (v1 model + wiring) and 007 (out-of-
+universe validation + this v2 refit); weights in
+CRUCIBLE/data/exp007_results.json ("refit_sp500_time_split"), reproducible
+via CRUCIBLE/experiments/exp007_f004_out_of_universe.py. Refit whenever the
 labeled set grows ~20% (always time-split; report Brier/ECE vs the table).
 
 IMPORTANT SEMANTICS (Finding 003): this probability is about MAGNITUDE — will
@@ -20,23 +24,25 @@ presented as unvalidated context, never as the thing the confidence refers to.
 import math
 import re
 
-# Logistic weights from exp004 (fit 2026-07-13, train <= 2025-12-31, n=684)
-_BIAS = -1.167
+# Logistic weights v2 from exp007 (fit 2026-07-13, S&P 500 universe,
+# train <= 2025-12-31, n=8,718)
+_BIAS = -1.2436
 _ITEM_WEIGHTS = {
-    "2.02": 1.7975,  # earnings results — dominates
-    "7.01": 0.0992,  # Reg FD disclosure
-    "8.01": -0.6371,  # other events (routine)
-    "1.01": -0.079,  # material agreement
-    "5.02": -0.4126,  # officer/director change (routine)
-    "5.07": -0.1059,  # shareholder vote (noise)
-    "9.01": 0.1998,  # exhibits attached
+    "2.02": 1.8769,  # earnings results — dominates
+    "7.01": 0.2398,  # Reg FD disclosure
+    "8.01": -0.2518,  # other events (routine)
+    "1.01": -0.1111,  # material agreement
+    "5.02": -0.0598,  # officer/director change
+    "5.07": -0.4124,  # shareholder vote (noise)
+    "9.01": 0.0735,  # exhibits attached
 }
-_VOL_WEIGHT = 0.3963  # per z-unit of trailing 20-session realized vol
-_AFTER_HOURS_WEIGHT = 0.0167
+_VOL_WEIGHT = 0.2884  # per z-unit of trailing 20-session realized vol
+# after-hours acceptance added nothing at either universe scale (v1: 0.0167)
+_AFTER_HOURS_WEIGHT = 0.0
 # Train-set standardization for trailing vol (daily-return stdev over the
 # 20 sessions before the event, in %)
-_VOL_MEAN = 2.0636
-_VOL_SD = 1.3078
+_VOL_MEAN = 1.9043
+_VOL_SD = 1.1465
 
 # Matches "[Item 2.02]" markers produced by filing_to_event, and bare
 # "Item 2.02" mentions in raw filing text.

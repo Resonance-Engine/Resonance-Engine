@@ -37,16 +37,13 @@ rises. Threshold is Reiyyan's product knob.
 
 ---
 
-### Bet E — Refit magnitude model on the 13k-event S&P 500 set
-**Question:** Does the F004 magnitude model hold out-of-universe (502 tickers
-vs the 46 it was fit on), and do sector / market-cap / surprise features
-raise AUC materially beyond 0.727?
-**Asset:** `data/sp500_labeled_8k_set.json` (13,022 events, exp006 by-product).
-**Kill criterion:** if the shipped F004 weights degrade badly out-of-universe
-(test Brier worse than the item-code base-rate table on the S&P 500 sample),
-that's a production incident — the shipped confidence is miscalibrated for
-non-mega-caps and must be refit or scoped before more signals go out.
-**Cost ceiling:** $0. ~1 session.
+### Bet E — F004 out-of-universe — **RESOLVED 2026-07-13, v2 SHIPPED**
+Finding 007: no miscalibration incident — v1 weights beat the base-rate table
+on 11,329 never-seen-ticker events (Brier 0.193 vs 0.195, AUC 0.739 vs 0.719).
+The 12× refit tested better (0.2178/0.715/ECE 8.1% vs 0.2208/0.706/8.8%) and
+shipped as **v2 weights in `src/agents/magnitude.py`**. Refit protocol fired
+correctly on its first trigger. Next ceiling: sector/market-cap features,
+1%/5% thresholds, 5-day horizon — beat AUC 0.715 (n=3,616).
 
 ## Killed
 
