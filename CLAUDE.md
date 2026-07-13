@@ -59,7 +59,8 @@ Financial intelligence platform that transforms unstructured SEC filings and new
 - News ingestion: `src/ingestion/gdelt/` (GDELT DOC 2.0, free) + `src/ingestion/newsapi/` (quota-gated)
 - Async scheduler: `src/scheduler.py` (EDGAR + news polling + feedback loop, market-hours gated; replaced Celery Beat — Celery is incompatible with Python 3.14)
 - Feedback loop: `src/ingestion/feedback_loop.py` (labels expired signals with actual market moves)
-- Labeled test set: `backend/data/labeled_test_set.json` (100 events with ground truth)
+- ⚠️ `backend/data/labeled_test_set.json` is **FABRICATED** (CRUCIBLE Finding 001) — its "ground truth" labels are invented (51% sign agreement with real markets). Never evaluate or tune against it; texts are smoke-test inputs at most. Real labeled sets: `CRUCIBLE/data/real_labeled_8k_set.json` (1,074 events) and `CRUCIBLE/data/sp500_labeled_8k_set.json` (13,022 events), both regenerable by script.
+- Research function: `CRUCIBLE/` (charter, bets register, findings 001–009, reproducible experiments). Read `CRUCIBLE/BETS.md` before proposing research or model changes. Shipped from it: calibrated magnitude confidence + major-move tier in `src/agents/magnitude.py`.
 
 **Dead code (do not build on):**
 - `src/celery_app.py` and the `@app.task` wrappers in `src/ingestion/*/tasks.py` — replaced by the async scheduler. Live EDGAR filing→Event conversion lives in `src/ingestion/edgar/events.py` (`filing_to_event`).
@@ -70,7 +71,7 @@ Financial intelligence platform that transforms unstructured SEC filings and new
 2. ~~**Frontend integration**~~ — DONE: API client, auth flow, dashboard wiring
 3. ~~**WebSocket gateway**~~ — DONE: `src/gateway/` (real-time signal push, token-authenticated)
 4. ~~**News ingestion expansion**~~ — DONE: GDELT + NewsAPI (quota-tracked)
-5. ~~**Labeled test set**~~ — DONE: 100 events with ground truth for evaluation
+5. ~~**Labeled test set**~~ — superseded: the original 100-event set proved fabricated (CRUCIBLE Finding 001); real replacements live in `CRUCIBLE/data/` (1,074 + 13,022 events)
 6. **Live end-to-end test** — Docker Compose up → Alembic migrate → real EDGAR filing → signal
 
 ## Core Pipeline Architecture
