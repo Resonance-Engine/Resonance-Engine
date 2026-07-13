@@ -11,6 +11,11 @@ Output: evidence[], confidence, predicted_move, rationale, uncertainty.
 import logging
 import uuid
 
+from src.agents.magnitude import (
+    MAGNITUDE_THRESHOLD_PCT,
+    extract_item_codes,
+    magnitude_probability,
+)
 from src.agents.state import PipelineState
 
 logger = logging.getLogger(__name__)
@@ -94,13 +99,25 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
         impact_window = _determine_impact_window(event_type)
 
         # 4. Calibrate confidence
-        # Evidence quality is the primary driver. Sentiment adds a small bonus.
-        # Target ranges: 0 evidence → ~37-55% (weak extractions fall below the
-        # risk gate's 0.40 line), 1-2 → 58-75%, 3+ → 68-85%
         n_evidence = len(evidence_items)
+
+        # For SEC 8-K filings with item codes, confidence is a MEASURED
+        # probability: P(|SPY-adjusted move| >= 2%) in the first session,
+        # calibrated on 1,022 real filings (see src/agents/magnitude.py).
+        # Per CRUCIBLE Finding 003, this refers to magnitude only — filing
+        # sentiment carries no validated directional signal.
+        item_codes = list(
+            state.get("filing_metadata", {}).get("item_codes") or []
+        ) or extract_item_codes(state.get("raw_text", ""))
+        magnitude_calibrated = (
+            state.get("source", "SEC_EDGAR") == "SEC_EDGAR" and bool(item_codes)
+        )
+
         sentiment_bonus = abs(sentiment_score) * 0.05  # 0-0.05 from sentiment strength
 
-        if n_evidence >= 3:
+        if magnitude_calibrated:
+            confidence = magnitude_probability(item_codes)
+        elif n_evidence >= 3:
             avg_similarity = sum(e.get("similarity_score", 0) for e in evidence_items) / n_evidence
             evidence_depth = min(n_evidence / 5, 1.0) * 0.03  # up to 0.03 for 5+ evidence
             # 5 evidence at 0.85 sim → 0.45 + 0.35*0.85 + 0.03 + ~0.01 = 0.787
@@ -129,11 +146,15 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
         rationale = _build_rationale(
             primary_ticker, event_type, sentiment_label, sentiment_score,
             predicted_move, evidence_items, n_evidence,
+            magnitude_calibrated=magnitude_calibrated,
+            item_codes=item_codes,
+            confidence=confidence,
         )
 
         # 6. Generate uncertainty statement
         uncertainty = _build_uncertainty(
             event_type, n_evidence, sentiment_label,
+            magnitude_calibrated=magnitude_calibrated,
         )
 
         return {
@@ -201,6 +222,9 @@ def _determine_impact_window(event_type: str) -> str:
 def _build_rationale(
     ticker: str, event_type: str, sentiment: str, sentiment_score: float,
     predicted_move: float | None, evidence: list[dict], n_evidence: int,
+    magnitude_calibrated: bool = False,
+    item_codes: list[str] | None = None,
+    confidence: float = 0.0,
 ) -> str:
     """Build human-readable rationale grounded in evidence."""
     parts = []
@@ -212,6 +236,15 @@ def _build_rationale(
         f"A {event_str} event was detected for {ticker_str} with "
         f"{sentiment} sentiment (score: {sentiment_score:.2f})."
     )
+
+    if magnitude_calibrated:
+        codes = ", ".join(item_codes or [])
+        parts.append(
+            f"8-K item codes [{codes}] imply a {confidence:.0%} probability of a "
+            f"market-adjusted move of at least {MAGNITUDE_THRESHOLD_PCT:.0f}% in the "
+            "first trading session, based on historical frequencies across "
+            "1,000+ comparable filings."
+        )
 
     if n_evidence > 0:
         parts.append(
@@ -229,18 +262,32 @@ def _build_rationale(
             f"Predicted market impact: {direction}{predicted_move:.2%} based on "
             f"{'historical evidence' if n_evidence > 0 else 'sentiment analysis'}."
         )
-    else:
+    elif not magnitude_calibrated:
+        # When magnitude is calibrated, the probability statement above IS the
+        # impact estimate — don't contradict it.
         parts.append("Insufficient data to predict specific market impact magnitude.")
 
     # Note: disclaimer is appended separately by the risk gate agent
     return " ".join(parts)
 
 
-def _build_uncertainty(event_type: str, n_evidence: int, sentiment: str) -> str:
+def _build_uncertainty(
+    event_type: str, n_evidence: int, sentiment: str,
+    magnitude_calibrated: bool = False,
+) -> str:
     """Build uncertainty statement highlighting known unknowns."""
     parts = []
 
-    if n_evidence < 3:
+    if magnitude_calibrated:
+        parts.append(
+            "Confidence refers to the probability of a material move (magnitude), "
+            "not its direction — direction estimates from filing sentiment are "
+            "not validated by historical evidence and should be treated as context only."
+        )
+
+    if n_evidence < 3 and not magnitude_calibrated:
+        # Calibrated magnitude confidence doesn't depend on retrieved evidence,
+        # so low evidence count doesn't make it "lower than reported".
         parts.append(
             f"Limited historical evidence ({n_evidence} similar events found). "
             "Confidence may be lower than reported."

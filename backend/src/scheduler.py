@@ -173,6 +173,10 @@ async def _poll_edgar(form_type: str, limit: int) -> dict:
                 "raw_text": event.raw_text,
                 "source": "SEC_EDGAR",
                 "source_url": file_url,
+                "form_type": form_type,
+                # Carries item_codes so impact_hypothesis can use the
+                # calibrated magnitude model (src/agents/magnitude.py)
+                "filing_metadata": event.metadata or {},
             })
             confidence = result.get("confidence", 0)
             ticker = result.get("primary_ticker", "?")
