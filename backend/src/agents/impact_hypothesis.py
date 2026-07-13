@@ -13,8 +13,11 @@ import uuid
 
 from src.agents.magnitude import (
     MAGNITUDE_THRESHOLD_PCT,
+    MAJOR_ALERT_LINE,
+    MAJOR_THRESHOLD_PCT,
     extract_item_codes,
     magnitude_probability,
+    major_move_probability,
 )
 from src.agents.state import PipelineState
 
@@ -115,8 +118,16 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
 
         sentiment_bonus = abs(sentiment_score) * 0.05  # 0-0.05 from sentiment strength
 
+        major_probability: float | None = None
         if magnitude_calibrated:
             confidence = magnitude_probability(item_codes)
+            sic_code = next(
+                (e.get("sic_code") for e in state.get("entities", []) if e.get("sic_code")),
+                None,
+            )
+            major_probability = round(
+                major_move_probability(item_codes, sic_code=sic_code), 4
+            )
         elif n_evidence >= 3:
             avg_similarity = sum(e.get("similarity_score", 0) for e in evidence_items) / n_evidence
             evidence_depth = min(n_evidence / 5, 1.0) * 0.03  # up to 0.03 for 5+ evidence
@@ -149,6 +160,7 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
             magnitude_calibrated=magnitude_calibrated,
             item_codes=item_codes,
             confidence=confidence,
+            major_probability=major_probability,
         )
 
         # 6. Generate uncertainty statement
@@ -162,6 +174,7 @@ async def impact_hypothesis_agent(state: PipelineState) -> dict:
             "predicted_move": predicted_move,
             "impact_window": impact_window,
             "confidence": confidence,
+            "major_move_probability": major_probability,
             "rationale": rationale,
             "uncertainty": uncertainty,
             "errors": errors,
@@ -225,6 +238,7 @@ def _build_rationale(
     magnitude_calibrated: bool = False,
     item_codes: list[str] | None = None,
     confidence: float = 0.0,
+    major_probability: float | None = None,
 ) -> str:
     """Build human-readable rationale grounded in evidence."""
     parts = []
@@ -245,6 +259,12 @@ def _build_rationale(
             "first trading session, based on historical frequencies across "
             "1,000+ comparable filings."
         )
+        if major_probability is not None and major_probability >= MAJOR_ALERT_LINE:
+            parts.append(
+                f"MAJOR IMPACT TIER: {major_probability:.0%} probability of a move of "
+                f"at least {MAJOR_THRESHOLD_PCT:.0f}% — filings at this level proved "
+                "major roughly half the time historically, ~3x the base rate."
+            )
 
     if n_evidence > 0:
         parts.append(

@@ -13,6 +13,7 @@ from src.agents.impact_hypothesis import impact_hypothesis_agent
 from src.agents.magnitude import (
     extract_item_codes,
     magnitude_probability,
+    major_move_probability,
 )
 
 
@@ -71,6 +72,30 @@ def test_probability_bounds():
     assert 0.0 < magnitude_probability(list(["2.02"]) * 1, trailing_vol=50.0) < 1.0
 
 
+# --- major_move_probability (Finding 009) ---
+
+
+def test_major_earnings_filing_matches_published_weights():
+    # v bias -2.4142 + 2.02 (2.0024) + 9.01 (-0.1342) = -0.546
+    expected = _sigmoid(-0.546)
+    assert major_move_probability(["2.02", "9.01"]) == pytest.approx(expected, abs=1e-6)
+
+
+def test_major_sector_weight_uses_two_digit_sic_group():
+    base = major_move_probability(["2.02"])
+    software = major_move_probability(["2.02"], sic_code="7372")  # sic 73: +0.4693
+    utility = major_move_probability(["2.02"], sic_code="4911")  # sic 49: -0.6874
+    unknown = major_move_probability(["2.02"], sic_code="9999")  # not in table
+    assert software > base > utility
+    assert unknown == pytest.approx(base, abs=1e-9)
+
+
+def test_major_is_rarer_than_material():
+    # P(>=5%) must be below P(>=2%) for the same filing — sanity ordering
+    for items in (["2.02", "9.01"], ["5.07"], ["8.01"]):
+        assert major_move_probability(items) < magnitude_probability(items)
+
+
 # --- pipeline wiring (impact_hypothesis agent) ---
 
 
@@ -99,6 +124,28 @@ async def test_agent_uses_magnitude_model_for_8k_with_metadata_item_codes():
     )
     assert "magnitude" in result["uncertainty"]
     assert "2.02" in result["rationale"]
+    assert result["major_move_probability"] == pytest.approx(
+        major_move_probability(["2.02", "9.01"]), abs=1e-4
+    )
+
+
+async def test_agent_major_tier_uses_entity_sic_and_flags_rationale():
+    # Software sector (SIC 73) pushes an earnings 8-K over the 0.40 alert line
+    state = _base_state(
+        filing_metadata={"item_codes": ["2.02"]},
+        entities=[{"ticker": "TEST", "sic_code": "7372"}],
+    )
+    result = await impact_hypothesis_agent(state)
+    expected = major_move_probability(["2.02"], sic_code="7372")
+    assert result["major_move_probability"] == pytest.approx(expected, abs=1e-4)
+    assert expected >= 0.40
+    assert "MAJOR IMPACT TIER" in result["rationale"]
+
+
+async def test_agent_major_tier_absent_for_non_calibrated_events():
+    result = await impact_hypothesis_agent(_base_state())
+    assert result["major_move_probability"] is None
+    assert "MAJOR IMPACT TIER" not in (result["rationale"] or "")
 
 
 async def test_agent_extracts_item_codes_from_raw_text_fallback():

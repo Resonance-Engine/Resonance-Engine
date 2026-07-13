@@ -45,15 +45,14 @@ shipped as **v2 weights in `src/agents/magnitude.py`**. Refit protocol fired
 correctly on its first trigger. Next ceiling: sector/market-cap features,
 1%/5% thresholds, 5-day horizon — beat AUC 0.715 (n=3,616).
 
-## Candidate (not yet active)
-
-### Bet G — Two-tier signals: a high-conviction P(≥5%) alert
-Finding 008 secondary: |abn_1d| ≥ 5% is far more predictable than the shipped
-≥2% target — AUC 0.801 (v2 features) / 0.826 (with sector), ECE ~0.02. A
-rarer, sharper "major impact expected" tier could sit above the current
-signal. Needs fresh pre-registration (bar, gate threshold, rationale text)
-before any wiring. Sector features earn their keep here (gain 2.5× larger
-than at ≥2%).
+### Bet G — Two-tier P(≥5%) alert — **VALIDATED + SHIPPED 2026-07-13**
+Finding 009: items+vol+sector model, held-out 2026 — AUC 0.824, Brier 0.108,
+ECE 2.4%; precision 0.503 at the P≥0.40 line (336 alerts, 3.1× base rate).
+All pre-registered criteria passed. Shipped as `major_move_probability` in
+`src/agents/magnitude.py` + impact_hypothesis + signal metadata; "MAJOR
+IMPACT TIER" rationale line at ≥0.40. 286 tests passing. Follow-ups: live
+trailing vol for both heads (implementation task); feedback loop should
+watch live tier precision (~0.50 expected; <0.40 = drift alarm).
 
 ## Killed
 

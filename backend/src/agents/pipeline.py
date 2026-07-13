@@ -92,6 +92,7 @@ async def _store_signal_node(state: PipelineState) -> dict:
                 "sentiment_score": state.get("sentiment_score"),
                 "lm_scores": state.get("lm_scores"),
                 "evidence_count": len(evidence),
+                "major_move_probability": state.get("major_move_probability"),
                 "disclaimer": state.get("disclaimer", ""),
             },
         )

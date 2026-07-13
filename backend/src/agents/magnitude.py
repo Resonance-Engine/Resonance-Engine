@@ -50,6 +50,40 @@ _ITEM_CODE_RE = re.compile(r"\bitem\s+(\d\.\d\d)\b", re.IGNORECASE)
 
 MAGNITUDE_THRESHOLD_PCT = 2.0  # the "material move" this probability refers to
 
+# --- Major-move tier (Bet G / Finding 009) -------------------------------
+# Second calibrated head: P(|SPY-adjusted move| >= 5%). Logistic over item
+# codes + trailing vol + 2-digit-SIC sector, fit on the same S&P 500 train
+# split as v2. Held-out 2026: Brier 0.108, AUC 0.824, ECE 2.4%; at the
+# alert line P >= 0.40, precision 0.503 vs a 16.2% base rate (3.1x).
+# Weights: CRUCIBLE/data/exp009_results.json + finding 009.
+MAJOR_THRESHOLD_PCT = 5.0
+MAJOR_ALERT_LINE = 0.40  # rationale calls out the tier at/above this
+
+_MAJOR_BIAS = -2.4142
+_MAJOR_ITEM_WEIGHTS = {
+    "2.02": 2.0024,
+    "7.01": -0.0035,
+    "8.01": -0.3167,
+    "1.01": -0.3882,
+    "5.02": -0.6683,
+    "5.07": -0.7603,
+    "9.01": -0.1342,
+}
+_MAJOR_VOL_WEIGHT = 0.2134
+# 2-digit SIC major groups (top-10 by train frequency); others contribute 0.
+_MAJOR_SIC_WEIGHTS = {
+    "49": -0.6874,  # utilities — big moves are rare
+    "73": 0.4693,  # business services / software
+    "27": -0.644,  # printing & publishing
+    "38": 0.1822,  # instruments
+    "67": -0.4424,  # holding/investment offices
+    "28": -0.091,  # chemicals & pharma
+    "36": 0.2389,  # electronics
+    "35": 0.2876,  # industrial machinery (incl. computers)
+    "63": -0.332,  # insurance
+    "60": -0.6066,  # depository institutions (banks)
+}
+
 
 def extract_item_codes(text: str) -> list[str]:
     """Pull 8-K item codes (e.g. "2.02") from event raw text.
@@ -87,4 +121,32 @@ def magnitude_probability(
     z += _VOL_WEIGHT * vol_z
     if after_hours:
         z += _AFTER_HOURS_WEIGHT
+    return 1.0 / (1.0 + math.exp(-z))
+
+
+def major_move_probability(
+    item_codes: list[str],
+    trailing_vol: float | None = None,
+    sic_code: str | None = None,
+) -> float:
+    """Calibrated P(|SPY-adjusted move| >= 5%) over the filing's first session.
+
+    Args:
+        item_codes: 8-K item codes present on the filing.
+        trailing_vol: Stdev of daily returns (%) over the prior 20 sessions.
+            None → train-average assumption (z = 0).
+        sic_code: The filer's SIC code (e.g. "3674"); only the 2-digit major
+            group is used. None/unknown groups contribute 0 (graceful
+            degradation toward the items+vol model).
+
+    Returns:
+        Probability in (0, 1).
+    """
+    z = _MAJOR_BIAS
+    for code in item_codes:
+        z += _MAJOR_ITEM_WEIGHTS.get(code, 0.0)
+    vol_z = 0.0 if trailing_vol is None else (trailing_vol - _VOL_MEAN) / _VOL_SD
+    z += _MAJOR_VOL_WEIGHT * vol_z
+    if sic_code:
+        z += _MAJOR_SIC_WEIGHTS.get(str(sic_code)[:2], 0.0)
     return 1.0 / (1.0 + math.exp(-z))

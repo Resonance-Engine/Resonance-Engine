@@ -1,0 +1,103 @@
+{
+ "target": "|abn_1d| >= 5.0%",
+ "n_train": 8718,
+ "n_test": 3616,
+ "v2_features": {
+  "metrics": {
+   "brier": 0.1113,
+   "log_loss": 0.3586,
+   "ece_10bin": 0.0188,
+   "auc": 0.801,
+   "base_positive_rate": 0.162,
+   "n": 3616
+  },
+  "alerts": [
+   {
+    "line": 0.3,
+    "n_alerts": 1009,
+    "precision": 0.391,
+    "recall": 0.675
+   },
+   {
+    "line": 0.4,
+    "n_alerts": 227,
+    "precision": 0.454,
+    "recall": 0.176
+   },
+   {
+    "line": 0.5,
+    "n_alerts": 29,
+    "precision": 0.655,
+    "recall": 0.032
+   }
+  ]
+ },
+ "plus_sector": {
+  "metrics": {
+   "brier": 0.1074,
+   "log_loss": 0.3456,
+   "ece_10bin": 0.0224,
+   "auc": 0.826,
+   "base_positive_rate": 0.162,
+   "n": 3616
+  },
+  "alerts": [
+   {
+    "line": 0.3,
+    "n_alerts": 806,
+    "precision": 0.457,
+    "recall": 0.629
+   },
+   {
+    "line": 0.4,
+    "n_alerts": 328,
+    "precision": 0.524,
+    "recall": 0.294
+   },
+   {
+    "line": 0.5,
+    "n_alerts": 81,
+    "precision": 0.568,
+    "recall": 0.079
+   }
+  ]
+ },
+ "chosen_variant": "plus_sector",
+ "ship_check": {
+  "precision_at_0.40": 0.524,
+  "n_alerts": 328,
+  "ece": 0.0224,
+  "verdict": "SHIP"
+ },
+ "production_weights": {
+  "weights": {
+   "bias": -1.8713,
+   "2.02": 1.5897,
+   "7.01": -0.3303,
+   "8.01": -0.5255,
+   "1.01": -0.7201,
+   "5.02": -0.799,
+   "5.07": -0.7276,
+   "9.01": -0.4255,
+   "trailing_vol": 0.17,
+   "n_items": 0.3577,
+   "item202_x_vol": 0.0604,
+   "log1p_days_since_last": 0.123,
+   "log10_adv": 0.0211,
+   "sic_49": -0.6442,
+   "sic_73": 0.4397,
+   "sic_27": -0.4734,
+   "sic_38": 0.204,
+   "sic_67": -0.4191,
+   "sic_28": -0.0681,
+   "sic_36": 0.2136,
+   "sic_35": 0.2697,
+   "sic_63": -0.2779,
+   "sic_60": -0.5686
+  },
+  "vol_standardization": {
+   "train_mean": 1.9043,
+   "train_sd": 1.1465
+  }
+ }
+}

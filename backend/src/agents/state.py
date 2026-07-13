@@ -41,6 +41,7 @@ class PipelineState(TypedDict, total=False):
     predicted_move: float | None
     impact_window: str | None  # "1h", "4h", "24h", "1w"
     confidence: float | None  # Calibrated confidence score
+    major_move_probability: float | None  # Calibrated P(|move| >= 5%), 8-Ks only
     rationale: str | None
     uncertainty: str | None
 
