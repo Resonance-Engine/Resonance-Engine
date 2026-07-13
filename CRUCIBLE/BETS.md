@@ -37,14 +37,19 @@ rises. Threshold is Reiyyan's product knob.
 
 ---
 
-## Candidate (not yet active)
-
-### Bet D — Direction from surprise, not tone
-Finding 003 killed tone features but left the real hypothesis untested: the
-market prices results **vs. consensus expectations**. Requires a consensus /
-estimates source (none free at scale identified yet) or a proxy (e.g.
-pre-filing drift, options-implied move). Do not activate until a viable free
-or cheap data source is scoped — sourcing IS the bet.
+### Bet D — Direction from surprise, not tone — **ACTIVE (probe positive)**
+**Finding 005:** Yahoo `earningsHistory` (free) solved the sourcing question.
+On 185 real joins: beats are priced in (85% of events, no signal), but
+**misses are punished** — P(negative | miss) = 78.6%, P(≤−2%) = 60.7%,
+median −4.1%, monotone across surprise buckets, AUC 0.605. First recoverable
+directional signal, but n(miss)=28 and no time split possible yet.
+**Validation protocol:** scale to the S&P 500 (~2,000 joins, ~300 misses) —
+fetch earningsHistory for ~500 tickers + rebuild labels with exp002 machinery.
+**Kill criterion:** P(negative | miss) < 65% on the scaled sample, or the
+monotone bucket structure disappears.
+**Not wired into the pipeline until validated** — same discipline as Bet C.
+Live sketch when it passes: consensus fetched pre-filing, actual EPS parsed
+from the 8-K, surprise computed at signal time (no lookahead).
 
 ## Killed
 

@@ -1,0 +1,1865 @@
+{
+ "summary": {
+  "n_joined": 185,
+  "beat_rate": 0.849,
+  "positive_abn_rate": 0.411,
+  "sign_accuracy_beat_vs_abn": 0.497,
+  "majority_baseline": 0.589,
+  "auc_surprise_pct": 0.605,
+  "corr_surprise_vs_abn": 0.115,
+  "mean_abn_on_beat": -0.01,
+  "mean_abn_on_miss": -2.18
+ },
+ "per_event": [
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.57,
+   "eps_estimate": 1.42572,
+   "surprise_pct": 10.12,
+   "ticker": "AAPL",
+   "filed": "2025-07-31",
+   "abn_1d": -0.861,
+   "accession": "0000320193-25-000071"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.85,
+   "eps_estimate": 1.76993,
+   "surprise_pct": 4.52,
+   "ticker": "AAPL",
+   "filed": "2025-10-30",
+   "abn_1d": -0.708,
+   "accession": "0000320193-25-000077"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 2.84,
+   "eps_estimate": 2.6708,
+   "surprise_pct": 6.34,
+   "ticker": "AAPL",
+   "filed": "2026-01-29",
+   "abn_1d": 0.763,
+   "accession": "0000320193-26-000005"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 2.01,
+   "eps_estimate": 1.94275,
+   "surprise_pct": 3.46,
+   "ticker": "AAPL",
+   "filed": "2026-04-30",
+   "abn_1d": 2.962,
+   "accession": "0000320193-26-000011"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.97,
+   "eps_estimate": 2.90783,
+   "surprise_pct": 2.1399999999999997,
+   "ticker": "ABBV",
+   "filed": "2025-07-03",
+   "abn_1d": -0.127,
+   "accession": "0001551152-25-000034"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.86,
+   "eps_estimate": 1.78451,
+   "surprise_pct": 4.2299999999999995,
+   "ticker": "ABBV",
+   "filed": "2025-10-03",
+   "abn_1d": -1.949,
+   "accession": "0001551152-25-000043"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 2.71,
+   "eps_estimate": 2.65266,
+   "surprise_pct": 2.16,
+   "ticker": "ABBV",
+   "filed": "2026-01-07",
+   "abn_1d": -3.97,
+   "accession": "0001551152-26-000002"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 2.65,
+   "eps_estimate": 2.67067,
+   "surprise_pct": -0.77,
+   "ticker": "ABBV",
+   "filed": "2026-04-03",
+   "abn_1d": -1.502,
+   "accession": "0001551152-26-000011"
+  },
+  {
+   "quarter_end": "2025-08-31",
+   "eps_actual": 5.31,
+   "eps_estimate": 5.18163,
+   "surprise_pct": 2.48,
+   "ticker": "ADBE",
+   "filed": "2025-09-11",
+   "abn_1d": -0.306,
+   "accession": "0000796343-25-000102"
+  },
+  {
+   "quarter_end": "2025-11-30",
+   "eps_actual": 5.5,
+   "eps_estimate": 5.39763,
+   "surprise_pct": 1.9,
+   "ticker": "ADBE",
+   "filed": "2025-12-10",
+   "abn_1d": 1.895,
+   "accession": "0000796343-25-000135"
+  },
+  {
+   "quarter_end": "2026-02-28",
+   "eps_actual": 6.06,
+   "eps_estimate": 5.87314,
+   "surprise_pct": 3.18,
+   "ticker": "ADBE",
+   "filed": "2026-03-12",
+   "abn_1d": -7.018,
+   "accession": "0000796343-26-000048"
+  },
+  {
+   "quarter_end": "2026-05-31",
+   "eps_actual": 5.96,
+   "eps_estimate": 5.81474,
+   "surprise_pct": 2.5,
+   "ticker": "ADBE",
+   "filed": "2026-06-11",
+   "abn_1d": -7.296,
+   "accession": "0000796343-26-000109"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.48,
+   "eps_estimate": 0.48264,
+   "surprise_pct": -0.5499999999999999,
+   "ticker": "AMD",
+   "filed": "2025-08-05",
+   "abn_1d": -7.186,
+   "accession": "0000002488-25-000106"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.2,
+   "eps_estimate": 1.171,
+   "surprise_pct": 2.48,
+   "ticker": "AMD",
+   "filed": "2025-11-04",
+   "abn_1d": 2.165,
+   "accession": "0000002488-25-000163"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.53,
+   "eps_estimate": 1.31917,
+   "surprise_pct": 15.98,
+   "ticker": "AMD",
+   "filed": "2026-02-03",
+   "abn_1d": -16.83,
+   "accession": "0000002488-26-000014"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.37,
+   "eps_estimate": 1.29468,
+   "surprise_pct": 5.82,
+   "ticker": "AMD",
+   "filed": "2026-05-05",
+   "abn_1d": 17.225,
+   "accession": "0000002488-26-000072"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.68,
+   "eps_estimate": 1.33192,
+   "surprise_pct": 26.13,
+   "ticker": "AMZN",
+   "filed": "2025-07-31",
+   "abn_1d": -6.631,
+   "accession": "0001018724-25-000084"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.95,
+   "eps_estimate": 1.55757,
+   "surprise_pct": 25.2,
+   "ticker": "AMZN",
+   "filed": "2025-10-30",
+   "abn_1d": 9.256,
+   "accession": "0001018724-25-000121"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.95,
+   "eps_estimate": 1.95962,
+   "surprise_pct": -0.49,
+   "ticker": "AMZN",
+   "filed": "2026-02-05",
+   "abn_1d": -7.473,
+   "accession": "0001018724-26-000002"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 2.78,
+   "eps_estimate": 1.65303,
+   "surprise_pct": 68.17999999999999,
+   "ticker": "AMZN",
+   "filed": "2026-04-29",
+   "abn_1d": -0.227,
+   "accession": "0001018724-26-000012"
+  },
+  {
+   "quarter_end": "2025-07-31",
+   "eps_actual": 1.69,
+   "eps_estimate": 1.66338,
+   "surprise_pct": 1.6,
+   "ticker": "AVGO",
+   "filed": "2025-09-04",
+   "abn_1d": 9.695,
+   "accession": "0001730168-25-000094"
+  },
+  {
+   "quarter_end": "2025-10-31",
+   "eps_actual": 1.95,
+   "eps_estimate": 1.86817,
+   "surprise_pct": 4.38,
+   "ticker": "AVGO",
+   "filed": "2025-12-11",
+   "abn_1d": -10.353,
+   "accession": "0001730168-25-000116"
+  },
+  {
+   "quarter_end": "2026-01-31",
+   "eps_actual": 2.05,
+   "eps_estimate": 2.02326,
+   "surprise_pct": 1.3200001,
+   "ticker": "AVGO",
+   "filed": "2026-03-04",
+   "abn_1d": 5.357,
+   "accession": "0001730168-26-000011"
+  },
+  {
+   "quarter_end": "2026-04-30",
+   "eps_actual": 2.44,
+   "eps_estimate": 2.39835,
+   "surprise_pct": 1.7399999999999998,
+   "ticker": "AVGO",
+   "filed": "2026-06-03",
+   "abn_1d": -12.965,
+   "accession": "0001730168-26-000051"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": -1.24,
+   "eps_estimate": -1.26982,
+   "surprise_pct": 2.35,
+   "ticker": "BA",
+   "filed": "2025-07-29",
+   "abn_1d": -4.106,
+   "accession": "0000012927-25-000058"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": -7.47,
+   "eps_estimate": -2.37563,
+   "surprise_pct": -214.44001,
+   "ticker": "BA",
+   "filed": "2025-10-29",
+   "abn_1d": -4.414,
+   "accession": "0001628280-25-046915"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 9.92,
+   "eps_estimate": -0.40902,
+   "surprise_pct": 2525.3101,
+   "ticker": "BA",
+   "filed": "2026-01-27",
+   "abn_1d": -1.956,
+   "accession": "0001628280-26-003518"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": -0.2,
+   "eps_estimate": -0.67243,
+   "surprise_pct": 70.26,
+   "ticker": "BA",
+   "filed": "2026-04-22",
+   "abn_1d": 4.518,
+   "accession": "0001628280-26-026391"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.89,
+   "eps_estimate": 0.858,
+   "surprise_pct": 3.73,
+   "ticker": "BAC",
+   "filed": "2025-07-16",
+   "abn_1d": -0.594,
+   "accession": "0000070858-25-000254"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.06,
+   "eps_estimate": 0.9461,
+   "surprise_pct": 12.04,
+   "ticker": "BAC",
+   "filed": "2025-10-15",
+   "abn_1d": 3.928,
+   "accession": "0000070858-25-000390"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.98,
+   "eps_estimate": 0.95866,
+   "surprise_pct": 2.23,
+   "ticker": "BAC",
+   "filed": "2026-01-14",
+   "abn_1d": -3.286,
+   "accession": "0000070858-26-000020"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.11,
+   "eps_estimate": 1.02044,
+   "surprise_pct": 8.7799996,
+   "ticker": "BAC",
+   "filed": "2026-04-15",
+   "abn_1d": 1.029,
+   "accession": "0000070858-26-000222"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.0406,
+   "eps_estimate": 1.591,
+   "surprise_pct": 28.260002,
+   "ticker": "C",
+   "filed": "2025-07-15",
+   "abn_1d": 4.107,
+   "accession": "0001410578-25-001455"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.263,
+   "eps_estimate": 1.927,
+   "surprise_pct": 17.44,
+   "ticker": "C",
+   "filed": "2025-10-14",
+   "abn_1d": 4.014,
+   "accession": "0001104659-25-099097"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.2433,
+   "eps_estimate": 1.62375,
+   "surprise_pct": -23.43,
+   "ticker": "C",
+   "filed": "2026-01-14",
+   "abn_1d": -2.853,
+   "accession": "0001104659-26-003604"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 3.0614,
+   "eps_estimate": 2.59629,
+   "surprise_pct": 17.909999,
+   "ticker": "C",
+   "filed": "2026-04-14",
+   "abn_1d": 1.395,
+   "accession": "0001104659-26-042942"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 4.72,
+   "eps_estimate": 4.90312,
+   "surprise_pct": -3.73,
+   "ticker": "CAT",
+   "filed": "2025-08-05",
+   "abn_1d": 0.629,
+   "accession": "0000018230-25-000037"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 4.95,
+   "eps_estimate": 4.52334,
+   "surprise_pct": 9.43,
+   "ticker": "CAT",
+   "filed": "2025-10-29",
+   "abn_1d": 11.587,
+   "accession": "0000018230-25-000043"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 5.16,
+   "eps_estimate": 4.71207,
+   "surprise_pct": 9.51,
+   "ticker": "CAT",
+   "filed": "2026-01-29",
+   "abn_1d": 3.612,
+   "accession": "0000018230-26-000003"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 5.54,
+   "eps_estimate": 4.64388,
+   "surprise_pct": 19.299999,
+   "ticker": "CAT",
+   "filed": "2026-04-30",
+   "abn_1d": 8.888,
+   "accession": "0000018230-26-000017"
+  },
+  {
+   "quarter_end": "2025-07-31",
+   "eps_actual": 2.91,
+   "eps_estimate": 2.77924,
+   "surprise_pct": 4.7,
+   "ticker": "CRM",
+   "filed": "2025-09-03",
+   "abn_1d": -5.687,
+   "accession": "0001108524-25-000083"
+  },
+  {
+   "quarter_end": "2025-10-31",
+   "eps_actual": 3.25,
+   "eps_estimate": 2.8622,
+   "surprise_pct": 13.55,
+   "ticker": "CRM",
+   "filed": "2025-12-03",
+   "abn_1d": 3.588,
+   "accession": "0001108524-25-000234"
+  },
+  {
+   "quarter_end": "2026-01-31",
+   "eps_actual": 3.81,
+   "eps_estimate": 3.05166,
+   "surprise_pct": 24.85,
+   "ticker": "CRM",
+   "filed": "2026-02-25",
+   "abn_1d": 4.582,
+   "accession": "0001108524-26-000056"
+  },
+  {
+   "quarter_end": "2026-04-30",
+   "eps_actual": 3.88,
+   "eps_estimate": 3.12729,
+   "surprise_pct": 24.069999,
+   "ticker": "CRM",
+   "filed": "2026-05-27",
+   "abn_1d": -1.307,
+   "accession": "0001108524-26-000125"
+  },
+  {
+   "quarter_end": "2025-07-31",
+   "eps_actual": 0.99,
+   "eps_estimate": 0.97731,
+   "surprise_pct": 1.2999999,
+   "ticker": "CSCO",
+   "filed": "2025-08-13",
+   "abn_1d": -1.572,
+   "accession": "0001193125-25-179820"
+  },
+  {
+   "quarter_end": "2025-10-31",
+   "eps_actual": 1.0,
+   "eps_estimate": 0.98216,
+   "surprise_pct": 1.82,
+   "ticker": "CSCO",
+   "filed": "2025-11-12",
+   "abn_1d": 6.284,
+   "accession": "0001193125-25-277624"
+  },
+  {
+   "quarter_end": "2026-01-31",
+   "eps_actual": 1.04,
+   "eps_estimate": 1.02214,
+   "surprise_pct": 1.7500000000000002,
+   "ticker": "CSCO",
+   "filed": "2026-02-11",
+   "abn_1d": -10.777,
+   "accession": "0000858877-26-000006"
+  },
+  {
+   "quarter_end": "2026-04-30",
+   "eps_actual": 1.06,
+   "eps_estimate": 1.03625,
+   "surprise_pct": 2.29,
+   "ticker": "CSCO",
+   "filed": "2026-05-13",
+   "abn_1d": 12.62,
+   "accession": "0000858877-26-000075"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.61,
+   "eps_estimate": 1.44649,
+   "surprise_pct": 11.3000005,
+   "ticker": "DIS",
+   "filed": "2025-08-06",
+   "abn_1d": -3.428,
+   "accession": "0001744489-25-000135"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.11,
+   "eps_estimate": 1.02382,
+   "surprise_pct": 8.42,
+   "ticker": "DIS",
+   "filed": "2025-11-13",
+   "abn_1d": -6.09,
+   "accession": "0001744489-25-000154"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.63,
+   "eps_estimate": 1.5758,
+   "surprise_pct": 3.44,
+   "ticker": "DIS",
+   "filed": "2026-02-02",
+   "abn_1d": -7.9,
+   "accession": "0001744489-26-000018"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.57,
+   "eps_estimate": 1.49547,
+   "surprise_pct": 4.9799999999999995,
+   "ticker": "DIS",
+   "filed": "2026-05-06",
+   "abn_1d": 6.154,
+   "accession": "0001744489-26-000036"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.66,
+   "eps_estimate": 1.43135,
+   "surprise_pct": 15.97,
+   "ticker": "GE",
+   "filed": "2025-07-17",
+   "abn_1d": -2.829,
+   "accession": "0000040545-25-000108"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.66,
+   "eps_estimate": 1.46885,
+   "surprise_pct": 13.01,
+   "ticker": "GE",
+   "filed": "2025-10-21",
+   "abn_1d": 1.307,
+   "accession": "0000040545-25-000131"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.57,
+   "eps_estimate": 1.42976,
+   "surprise_pct": 9.810001,
+   "ticker": "GE",
+   "filed": "2026-01-22",
+   "abn_1d": -7.901,
+   "accession": "0000040545-26-000005"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.86,
+   "eps_estimate": 1.59919,
+   "surprise_pct": 16.309999,
+   "ticker": "GE",
+   "filed": "2026-04-21",
+   "abn_1d": -4.902,
+   "accession": "0000040545-26-000026"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.31,
+   "eps_estimate": 2.18615,
+   "surprise_pct": 5.6700002,
+   "ticker": "GOOGL",
+   "filed": "2025-07-23",
+   "abn_1d": 0.987,
+   "accession": "0001652044-25-000056"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.87,
+   "eps_estimate": 2.26199,
+   "surprise_pct": 26.88,
+   "ticker": "GOOGL",
+   "filed": "2025-10-29",
+   "abn_1d": 3.616,
+   "accession": "0001652044-25-000087"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 2.82,
+   "eps_estimate": 2.63521,
+   "surprise_pct": 7.01,
+   "ticker": "GOOGL",
+   "filed": "2026-02-04",
+   "abn_1d": 0.711,
+   "accession": "0001652044-26-000012"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 5.11,
+   "eps_estimate": 2.66714,
+   "surprise_pct": 91.59,
+   "ticker": "GOOGL",
+   "filed": "2026-04-29",
+   "abn_1d": 8.967,
+   "accession": "0001652044-26-000043"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 10.91,
+   "eps_estimate": 9.66225,
+   "surprise_pct": 12.91,
+   "ticker": "GS",
+   "filed": "2025-07-16",
+   "abn_1d": 0.564,
+   "accession": "0001193125-25-159560"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 12.25,
+   "eps_estimate": 11.08738,
+   "surprise_pct": 10.4899995,
+   "ticker": "GS",
+   "filed": "2025-10-14",
+   "abn_1d": -1.914,
+   "accession": "0001193125-25-238058"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 14.01,
+   "eps_estimate": 11.65403,
+   "surprise_pct": 20.22,
+   "ticker": "GS",
+   "filed": "2026-01-08",
+   "abn_1d": -0.217,
+   "accession": "0000886982-26-000004"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 17.55,
+   "eps_estimate": 16.39241,
+   "surprise_pct": 7.06,
+   "ticker": "GS",
+   "filed": "2026-04-13",
+   "abn_1d": -2.851,
+   "accession": "0000886982-26-000096"
+  },
+  {
+   "quarter_end": "2025-07-31",
+   "eps_actual": 4.68,
+   "eps_estimate": 4.69448,
+   "surprise_pct": -0.31,
+   "ticker": "HD",
+   "filed": "2025-08-19",
+   "abn_1d": 3.709,
+   "accession": "0000354950-25-000195"
+  },
+  {
+   "quarter_end": "2025-10-31",
+   "eps_actual": 3.74,
+   "eps_estimate": 3.83395,
+   "surprise_pct": -2.4500001,
+   "ticker": "HD",
+   "filed": "2025-11-18",
+   "abn_1d": -5.179,
+   "accession": "0000354950-25-000238"
+  },
+  {
+   "quarter_end": "2026-01-31",
+   "eps_actual": 2.72,
+   "eps_estimate": 2.5232,
+   "surprise_pct": 7.8,
+   "ticker": "HD",
+   "filed": "2026-02-24",
+   "abn_1d": 1.26,
+   "accession": "0000354950-26-000026"
+  },
+  {
+   "quarter_end": "2026-04-30",
+   "eps_actual": 3.43,
+   "eps_estimate": 3.40647,
+   "surprise_pct": 0.69,
+   "ticker": "HD",
+   "filed": "2026-05-19",
+   "abn_1d": 1.543,
+   "accession": "0000354950-26-000101"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.8,
+   "eps_estimate": 2.65467,
+   "surprise_pct": 5.47,
+   "ticker": "IBM",
+   "filed": "2025-07-23",
+   "abn_1d": -7.657,
+   "accession": "0000051143-25-000048"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.65,
+   "eps_estimate": 2.44662,
+   "surprise_pct": 8.3100006,
+   "ticker": "IBM",
+   "filed": "2025-10-22",
+   "abn_1d": -1.466,
+   "accession": "0000051143-25-000061"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 4.52,
+   "eps_estimate": 4.29238,
+   "surprise_pct": 5.3000003,
+   "ticker": "IBM",
+   "filed": "2026-01-28",
+   "abn_1d": 5.325,
+   "accession": "0000051143-26-000004"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.91,
+   "eps_estimate": 1.81123,
+   "surprise_pct": 5.45,
+   "ticker": "IBM",
+   "filed": "2026-04-22",
+   "abn_1d": -7.863,
+   "accession": "0000051143-26-000036"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": -0.1,
+   "eps_estimate": 0.00935,
+   "surprise_pct": -1169.52,
+   "ticker": "INTC",
+   "filed": "2025-07-24",
+   "abn_1d": -8.951,
+   "accession": "0000050863-25-000107"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 0.23,
+   "eps_estimate": 0.00714,
+   "surprise_pct": 3121.29,
+   "ticker": "INTC",
+   "filed": "2025-10-23",
+   "abn_1d": -0.503,
+   "accession": "0000050863-25-000169"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.15,
+   "eps_estimate": 0.08264,
+   "surprise_pct": 81.51,
+   "ticker": "INTC",
+   "filed": "2026-01-22",
+   "abn_1d": -17.065,
+   "accession": "0000050863-26-000009"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 0.29,
+   "eps_estimate": 0.01313,
+   "surprise_pct": 2108.68,
+   "ticker": "INTC",
+   "filed": "2026-04-23",
+   "abn_1d": 22.825,
+   "accession": "0000050863-26-000077"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.77,
+   "eps_estimate": 2.68396,
+   "surprise_pct": 3.2099999999999995,
+   "ticker": "JNJ",
+   "filed": "2025-07-16",
+   "abn_1d": 5.859,
+   "accession": "0000200406-25-000170"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.8,
+   "eps_estimate": 2.75894,
+   "surprise_pct": 1.49,
+   "ticker": "JNJ",
+   "filed": "2025-10-14",
+   "abn_1d": 0.096,
+   "accession": "0000200406-25-000201"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 2.46,
+   "eps_estimate": 2.46271,
+   "surprise_pct": -0.11,
+   "ticker": "JNJ",
+   "filed": "2026-01-21",
+   "abn_1d": -1.246,
+   "accession": "0000200406-26-000002"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 2.7,
+   "eps_estimate": 2.67727,
+   "surprise_pct": 0.8500000000000001,
+   "ticker": "JNJ",
+   "filed": "2026-04-14",
+   "abn_1d": -0.319,
+   "accession": "0000200406-26-000076"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 4.96,
+   "eps_estimate": 4.48379,
+   "surprise_pct": 10.620000000000001,
+   "ticker": "JPM",
+   "filed": "2025-07-15",
+   "abn_1d": -0.317,
+   "accession": "0000019617-25-000518"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 5.07,
+   "eps_estimate": 4.87467,
+   "surprise_pct": 4.01,
+   "ticker": "JPM",
+   "filed": "2025-10-14",
+   "abn_1d": -1.79,
+   "accession": "0001628280-25-044845"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 4.63,
+   "eps_estimate": 4.81831,
+   "surprise_pct": -3.9100002000000003,
+   "ticker": "JPM",
+   "filed": "2026-01-13",
+   "abn_1d": -3.988,
+   "accession": "0001628280-26-001902"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 5.94,
+   "eps_estimate": 5.51098,
+   "surprise_pct": 7.7800006,
+   "ticker": "JPM",
+   "filed": "2026-04-14",
+   "abn_1d": -2.035,
+   "accession": "0001628280-26-024990"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.87,
+   "eps_estimate": 0.83708,
+   "surprise_pct": 3.9300002000000003,
+   "ticker": "KO",
+   "filed": "2025-07-22",
+   "abn_1d": -0.599,
+   "accession": "0000021344-25-000054"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 0.82,
+   "eps_estimate": 0.77857,
+   "surprise_pct": 5.3200003,
+   "ticker": "KO",
+   "filed": "2025-10-21",
+   "abn_1d": 4.063,
+   "accession": "0001628280-25-045577"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.58,
+   "eps_estimate": 0.56479,
+   "surprise_pct": 2.69,
+   "ticker": "KO",
+   "filed": "2026-02-10",
+   "abn_1d": -1.224,
+   "accession": "0001628280-26-006642"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 0.86,
+   "eps_estimate": 0.81227,
+   "surprise_pct": 5.88,
+   "ticker": "KO",
+   "filed": "2026-04-28",
+   "abn_1d": 4.344,
+   "accession": "0001628280-26-027723"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 4.15,
+   "eps_estimate": 4.02443,
+   "surprise_pct": 3.1199999999999997,
+   "ticker": "MA",
+   "filed": "2025-07-31",
+   "abn_1d": 1.691,
+   "accession": "0001141391-25-000170"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 4.38,
+   "eps_estimate": 4.31425,
+   "surprise_pct": 1.52,
+   "ticker": "MA",
+   "filed": "2025-10-30",
+   "abn_1d": 0.938,
+   "accession": "0001141391-25-000191"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 4.76,
+   "eps_estimate": 4.24031,
+   "surprise_pct": 12.2600004,
+   "ticker": "MA",
+   "filed": "2026-01-29",
+   "abn_1d": 4.487,
+   "accession": "0001141391-26-000003"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 4.6,
+   "eps_estimate": 4.41328,
+   "surprise_pct": 4.2299999999999995,
+   "ticker": "MA",
+   "filed": "2026-04-30",
+   "abn_1d": -5.243,
+   "accession": "0001141391-26-000029"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 7.14,
+   "eps_estimate": 5.90298,
+   "surprise_pct": 20.959999,
+   "ticker": "META",
+   "filed": "2025-07-30",
+   "abn_1d": 11.628,
+   "accession": "0001628280-25-036719"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.05,
+   "eps_estimate": 6.70696,
+   "surprise_pct": -84.33999399999999,
+   "ticker": "META",
+   "filed": "2025-10-29",
+   "abn_1d": -10.235,
+   "accession": "0001628280-25-047114"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 8.88,
+   "eps_estimate": 8.22253,
+   "surprise_pct": 8.0,
+   "ticker": "META",
+   "filed": "2026-01-28",
+   "abn_1d": 10.603,
+   "accession": "0001628280-26-003832"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 10.44,
+   "eps_estimate": 6.65872,
+   "surprise_pct": 56.79,
+   "ticker": "META",
+   "filed": "2026-04-29",
+   "abn_1d": -9.545,
+   "accession": "0001628280-26-028364"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.16,
+   "eps_estimate": 2.01173,
+   "surprise_pct": 7.369999600000001,
+   "ticker": "MMM",
+   "filed": "2025-07-18",
+   "abn_1d": -3.58,
+   "accession": "0000066740-25-000061"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.19,
+   "eps_estimate": 2.07379,
+   "surprise_pct": 5.5999998,
+   "ticker": "MMM",
+   "filed": "2025-10-21",
+   "abn_1d": 7.664,
+   "accession": "0000066740-25-000086"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.83,
+   "eps_estimate": 1.79775,
+   "surprise_pct": 1.79,
+   "ticker": "MMM",
+   "filed": "2026-01-20",
+   "abn_1d": -4.925,
+   "accession": "0000066740-26-000003"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 2.14,
+   "eps_estimate": 1.98376,
+   "surprise_pct": 7.88,
+   "ticker": "MMM",
+   "filed": "2026-04-21",
+   "abn_1d": -1.281,
+   "accession": "0000066740-26-000171"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": -2.13,
+   "eps_estimate": -2.97002,
+   "surprise_pct": 28.280002,
+   "ticker": "MRNA",
+   "filed": "2025-08-01",
+   "abn_1d": -4.975,
+   "accession": "0001682852-25-000041"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": -0.51,
+   "eps_estimate": -2.17919,
+   "surprise_pct": 76.6,
+   "ticker": "MRNA",
+   "filed": "2025-11-06",
+   "abn_1d": 4.341,
+   "accession": "0001682852-25-000073"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": -2.11,
+   "eps_estimate": -2.60104,
+   "surprise_pct": 18.879999,
+   "ticker": "MRNA",
+   "filed": "2026-01-12",
+   "abn_1d": -1.498,
+   "accession": "0001682852-26-000007"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": -3.4,
+   "eps_estimate": -3.87993,
+   "surprise_pct": 12.370000000000001,
+   "ticker": "MRNA",
+   "filed": "2026-05-01",
+   "abn_1d": -1.518,
+   "accession": "0001682852-26-000057"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.13,
+   "eps_estimate": 1.96158,
+   "surprise_pct": 8.59,
+   "ticker": "MS",
+   "filed": "2025-07-16",
+   "abn_1d": -1.606,
+   "accession": "0000895421-25-000419"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.8,
+   "eps_estimate": 2.11118,
+   "surprise_pct": 32.630002000000005,
+   "ticker": "MS",
+   "filed": "2025-10-15",
+   "abn_1d": 4.262,
+   "accession": "0000895421-25-000535"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 2.68,
+   "eps_estimate": 2.44961,
+   "surprise_pct": 9.41,
+   "ticker": "MS",
+   "filed": "2026-01-15",
+   "abn_1d": 5.508,
+   "accession": "0000895421-26-000007"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 3.43,
+   "eps_estimate": 3.01764,
+   "surprise_pct": 13.66,
+   "ticker": "MS",
+   "filed": "2026-04-15",
+   "abn_1d": 3.727,
+   "accession": "0000895421-26-000111"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 3.65,
+   "eps_estimate": 3.37669,
+   "surprise_pct": 8.09,
+   "ticker": "MSFT",
+   "filed": "2025-07-30",
+   "abn_1d": 4.323,
+   "accession": "0000950170-25-100226"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 4.13,
+   "eps_estimate": 3.66355,
+   "surprise_pct": 12.73,
+   "ticker": "MSFT",
+   "filed": "2025-10-29",
+   "abn_1d": -1.816,
+   "accession": "0001193125-25-256310"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 4.14,
+   "eps_estimate": 3.91702,
+   "surprise_pct": 5.6900002,
+   "ticker": "MSFT",
+   "filed": "2026-01-28",
+   "abn_1d": -9.795,
+   "accession": "0001193125-26-027198"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 4.27,
+   "eps_estimate": 4.05827,
+   "surprise_pct": 5.2199997,
+   "ticker": "MSFT",
+   "filed": "2026-04-29",
+   "abn_1d": -4.925,
+   "accession": "0001193125-26-191457"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.719,
+   "eps_estimate": 0.70326,
+   "surprise_pct": 2.2399999999999998,
+   "ticker": "NFLX",
+   "filed": "2025-07-17",
+   "abn_1d": -5.023,
+   "accession": "0001065280-25-000322"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 0.587,
+   "eps_estimate": 0.69707,
+   "surprise_pct": -15.790000000000001,
+   "ticker": "NFLX",
+   "filed": "2025-10-21",
+   "abn_1d": -9.548,
+   "accession": "0001065280-25-000404"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.56,
+   "eps_estimate": 0.55208,
+   "surprise_pct": 1.43,
+   "ticker": "NFLX",
+   "filed": "2026-01-20",
+   "abn_1d": -3.332,
+   "accession": "0001065280-26-000033"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.23,
+   "eps_estimate": 1.24746,
+   "surprise_pct": -1.39999995,
+   "ticker": "NFLX",
+   "filed": "2026-04-16",
+   "abn_1d": -10.931,
+   "accession": "0001065280-26-000137"
+  },
+  {
+   "quarter_end": "2025-05-31",
+   "eps_actual": 0.14,
+   "eps_estimate": 0.12337,
+   "surprise_pct": 13.48,
+   "ticker": "NKE",
+   "filed": "2025-06-26",
+   "abn_1d": 14.693,
+   "accession": "0000320187-25-000034"
+  },
+  {
+   "quarter_end": "2025-08-31",
+   "eps_actual": 0.49,
+   "eps_estimate": 0.2656,
+   "surprise_pct": 84.489995,
+   "ticker": "NKE",
+   "filed": "2025-09-30",
+   "abn_1d": 6.07,
+   "accession": "0000320187-25-000091"
+  },
+  {
+   "quarter_end": "2025-11-30",
+   "eps_actual": 0.53,
+   "eps_estimate": 0.375,
+   "surprise_pct": 41.33,
+   "ticker": "NKE",
+   "filed": "2025-12-18",
+   "abn_1d": -11.153,
+   "accession": "0000320187-25-000138"
+  },
+  {
+   "quarter_end": "2026-02-28",
+   "eps_actual": 0.35,
+   "eps_estimate": 0.28165,
+   "surprise_pct": 24.270001,
+   "ticker": "NKE",
+   "filed": "2026-03-31",
+   "abn_1d": -16.259,
+   "accession": "0000320187-26-000026"
+  },
+  {
+   "quarter_end": "2026-05-31",
+   "eps_actual": 0.72,
+   "eps_estimate": 0.12718,
+   "surprise_pct": 466.13,
+   "ticker": "NKE",
+   "filed": "2026-06-23",
+   "abn_1d": -1.275,
+   "accession": "0000320187-26-000070"
+  },
+  {
+   "quarter_end": "2025-07-31",
+   "eps_actual": 1.05,
+   "eps_estimate": 1.00867,
+   "surprise_pct": 4.099999700000001,
+   "ticker": "NVDA",
+   "filed": "2025-08-27",
+   "abn_1d": -1.142,
+   "accession": "0001045810-25-000207"
+  },
+  {
+   "quarter_end": "2025-10-31",
+   "eps_actual": 1.3,
+   "eps_estimate": 1.25647,
+   "surprise_pct": 3.46,
+   "ticker": "NVDA",
+   "filed": "2025-11-19",
+   "abn_1d": -1.628,
+   "accession": "0001045810-25-000228"
+  },
+  {
+   "quarter_end": "2026-01-31",
+   "eps_actual": 1.62,
+   "eps_estimate": 1.53812,
+   "surprise_pct": 5.3200003,
+   "ticker": "NVDA",
+   "filed": "2026-02-25",
+   "abn_1d": -4.901,
+   "accession": "0001045810-26-000019"
+  },
+  {
+   "quarter_end": "2026-04-30",
+   "eps_actual": 1.87,
+   "eps_estimate": 1.77191,
+   "surprise_pct": 5.54,
+   "ticker": "NVDA",
+   "filed": "2026-05-20",
+   "abn_1d": -1.97,
+   "accession": "0001045810-26-000051"
+  },
+  {
+   "quarter_end": "2025-08-31",
+   "eps_actual": 1.47,
+   "eps_estimate": 1.47912,
+   "surprise_pct": -0.62,
+   "ticker": "ORCL",
+   "filed": "2025-09-09",
+   "abn_1d": 35.66,
+   "accession": "0001193125-25-199175"
+  },
+  {
+   "quarter_end": "2025-11-30",
+   "eps_actual": 2.26,
+   "eps_estimate": 1.6372,
+   "surprise_pct": 38.04,
+   "ticker": "ORCL",
+   "filed": "2025-12-10",
+   "abn_1d": -11.066,
+   "accession": "0001193125-25-314207"
+  },
+  {
+   "quarter_end": "2026-02-28",
+   "eps_actual": 1.79,
+   "eps_estimate": 1.69362,
+   "surprise_pct": 5.6900002,
+   "ticker": "ORCL",
+   "filed": "2026-03-10",
+   "abn_1d": 9.309,
+   "accession": "0001193125-26-100148"
+  },
+  {
+   "quarter_end": "2026-05-31",
+   "eps_actual": 2.11,
+   "eps_estimate": 1.96241,
+   "surprise_pct": 7.5200000000000005,
+   "ticker": "ORCL",
+   "filed": "2026-06-10",
+   "abn_1d": -10.226,
+   "accession": "0001193125-26-265848"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.78,
+   "eps_estimate": 0.5738,
+   "surprise_pct": 35.939997,
+   "ticker": "PFE",
+   "filed": "2025-08-05",
+   "abn_1d": 5.692,
+   "accession": "0000078003-25-000136"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 0.87,
+   "eps_estimate": 0.63307,
+   "surprise_pct": 37.43,
+   "ticker": "PFE",
+   "filed": "2025-11-04",
+   "abn_1d": -0.274,
+   "accession": "0000078003-25-000149"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.66,
+   "eps_estimate": 0.56808,
+   "surprise_pct": 16.18,
+   "ticker": "PFE",
+   "filed": "2026-02-03",
+   "abn_1d": -2.493,
+   "accession": "0000078003-26-000005"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 0.75,
+   "eps_estimate": 0.72166,
+   "surprise_pct": 3.9300002000000003,
+   "ticker": "PFE",
+   "filed": "2026-05-05",
+   "abn_1d": -0.232,
+   "accession": "0000078003-26-000053"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.48,
+   "eps_estimate": 1.42116,
+   "surprise_pct": 4.14,
+   "ticker": "PG",
+   "filed": "2025-07-29",
+   "abn_1d": -0.054,
+   "accession": "0000080424-25-000067"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.99,
+   "eps_estimate": 1.89677,
+   "surprise_pct": 4.9200002,
+   "ticker": "PG",
+   "filed": "2025-10-24",
+   "abn_1d": -0.633,
+   "accession": "0000080424-25-000240"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.88,
+   "eps_estimate": 1.85685,
+   "surprise_pct": 1.25,
+   "ticker": "PG",
+   "filed": "2026-01-22",
+   "abn_1d": 2.127,
+   "accession": "0000080424-26-000006"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.59,
+   "eps_estimate": 1.55547,
+   "surprise_pct": 2.22,
+   "ticker": "PG",
+   "filed": "2026-04-24",
+   "abn_1d": 0.92,
+   "accession": "0000080424-26-000056"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.77,
+   "eps_estimate": 2.71433,
+   "surprise_pct": 2.0499999,
+   "ticker": "QCOM",
+   "filed": "2025-07-30",
+   "abn_1d": -7.358,
+   "accession": "0000804328-25-000044"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 3.0,
+   "eps_estimate": 2.87578,
+   "surprise_pct": 4.32,
+   "ticker": "QCOM",
+   "filed": "2025-11-05",
+   "abn_1d": -2.555,
+   "accession": "0000804328-25-000084"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 3.5,
+   "eps_estimate": 3.40235,
+   "surprise_pct": 2.87,
+   "ticker": "QCOM",
+   "filed": "2026-02-04",
+   "abn_1d": -7.207,
+   "accession": "0000804328-26-000016"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 2.65,
+   "eps_estimate": 2.55842,
+   "surprise_pct": 3.58,
+   "ticker": "QCOM",
+   "filed": "2026-04-29",
+   "abn_1d": 14.12,
+   "accession": "0000804328-26-000060"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.5,
+   "eps_estimate": 0.64511,
+   "surprise_pct": -22.489999,
+   "ticker": "SBUX",
+   "filed": "2025-07-29",
+   "abn_1d": -0.089,
+   "accession": "0000829224-25-000057"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 0.52,
+   "eps_estimate": 0.55621,
+   "surprise_pct": -6.510000000000001,
+   "ticker": "SBUX",
+   "filed": "2025-10-29",
+   "abn_1d": -0.112,
+   "accession": "0000829224-25-000074"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.56,
+   "eps_estimate": 0.58692,
+   "surprise_pct": -4.5900002,
+   "ticker": "SBUX",
+   "filed": "2026-01-28",
+   "abn_1d": -0.575,
+   "accession": "0000829224-26-000010"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 0.5,
+   "eps_estimate": 0.43664,
+   "surprise_pct": 14.510000000000002,
+   "ticker": "SBUX",
+   "filed": "2026-04-28",
+   "abn_1d": 8.465,
+   "accession": "0000829224-26-000078"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": -0.16,
+   "eps_estimate": -0.15229,
+   "surprise_pct": -5.06,
+   "ticker": "SNAP",
+   "filed": "2025-08-05",
+   "abn_1d": -17.912,
+   "accession": "0001564408-25-000047"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": -0.06,
+   "eps_estimate": -0.12142,
+   "surprise_pct": 50.580000000000005,
+   "ticker": "SNAP",
+   "filed": "2025-11-05",
+   "abn_1d": 10.799,
+   "accession": "0001564408-25-000063"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.03,
+   "eps_estimate": -0.03367,
+   "surprise_pct": 189.1,
+   "ticker": "SNAP",
+   "filed": "2026-02-04",
+   "abn_1d": -12.118,
+   "accession": "0001564408-26-000011"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": -0.05,
+   "eps_estimate": -0.067,
+   "surprise_pct": 25.370002000000003,
+   "ticker": "SNAP",
+   "filed": "2026-04-15",
+   "abn_1d": 7.068,
+   "accession": "0001193125-26-155861"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.54,
+   "eps_estimate": 0.52983,
+   "surprise_pct": 1.9199998999999999,
+   "ticker": "T",
+   "filed": "2025-07-23",
+   "abn_1d": 0.353,
+   "accession": "0000732717-25-000076"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 0.54,
+   "eps_estimate": 0.53759,
+   "surprise_pct": 0.44999999999999996,
+   "ticker": "T",
+   "filed": "2025-10-22",
+   "abn_1d": -1.399,
+   "accession": "0000732717-25-000163"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.52,
+   "eps_estimate": 0.46603,
+   "surprise_pct": 11.58,
+   "ticker": "T",
+   "filed": "2026-01-28",
+   "abn_1d": 4.662,
+   "accession": "0000732717-26-000047"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 0.57,
+   "eps_estimate": 0.55113,
+   "surprise_pct": 3.42,
+   "ticker": "T",
+   "filed": "2026-04-22",
+   "abn_1d": -0.626,
+   "accession": "0000732717-26-000203"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.4,
+   "eps_estimate": 0.40451,
+   "surprise_pct": -1.11,
+   "ticker": "TSLA",
+   "filed": "2025-07-02",
+   "abn_1d": 4.515,
+   "accession": "0001628280-25-033842"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 0.5,
+   "eps_estimate": 0.55885,
+   "surprise_pct": -10.5299994,
+   "ticker": "TSLA",
+   "filed": "2025-10-02",
+   "abn_1d": -5.221,
+   "accession": "0001628280-25-043530"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.5,
+   "eps_estimate": 0.45061,
+   "surprise_pct": 10.96,
+   "ticker": "TSLA",
+   "filed": "2026-01-02",
+   "abn_1d": -2.774,
+   "accession": "0001628280-26-000016"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 0.41,
+   "eps_estimate": 0.34999,
+   "surprise_pct": 17.150000000000002,
+   "ticker": "TSLA",
+   "filed": "2026-04-02",
+   "abn_1d": -5.512,
+   "accession": "0001628280-26-022956"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.41,
+   "eps_estimate": 1.33258,
+   "surprise_pct": 5.81,
+   "ticker": "TXN",
+   "filed": "2025-07-22",
+   "abn_1d": -14.191,
+   "accession": "0000097476-25-000033"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.48,
+   "eps_estimate": 1.4859,
+   "surprise_pct": -0.4,
+   "ticker": "TXN",
+   "filed": "2025-10-21",
+   "abn_1d": -5.082,
+   "accession": "0000097476-25-000056"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.27,
+   "eps_estimate": 1.30773,
+   "surprise_pct": -2.8900001,
+   "ticker": "TXN",
+   "filed": "2026-01-27",
+   "abn_1d": 9.948,
+   "accession": "0000097476-26-000003"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.68,
+   "eps_estimate": 1.36856,
+   "surprise_pct": 22.760001,
+   "ticker": "TXN",
+   "filed": "2026-04-22",
+   "abn_1d": 19.82,
+   "accession": "0000097476-26-000097"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 0.63,
+   "eps_estimate": 0.62348,
+   "surprise_pct": 1.05,
+   "ticker": "UBER",
+   "filed": "2025-08-06",
+   "abn_1d": -0.956,
+   "accession": "0001543151-25-000020"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 3.11,
+   "eps_estimate": 0.68627,
+   "surprise_pct": 353.17001,
+   "ticker": "UBER",
+   "filed": "2025-11-04",
+   "abn_1d": -3.879,
+   "accession": "0001543151-25-000030"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 0.14,
+   "eps_estimate": 0.775,
+   "surprise_pct": -81.94,
+   "ticker": "UBER",
+   "filed": "2026-02-04",
+   "abn_1d": -4.661,
+   "accession": "0001543151-26-000011"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 0.13,
+   "eps_estimate": 0.71175,
+   "surprise_pct": -81.74,
+   "ticker": "UBER",
+   "filed": "2026-05-06",
+   "abn_1d": 7.136,
+   "accession": "0001543151-26-000019"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 4.08,
+   "eps_estimate": 4.44587,
+   "surprise_pct": -8.229999000000001,
+   "ticker": "UNH",
+   "filed": "2025-07-29",
+   "abn_1d": -7.198,
+   "accession": "0000731766-25-000228"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.92,
+   "eps_estimate": 2.80806,
+   "surprise_pct": 3.9899999999999998,
+   "ticker": "UNH",
+   "filed": "2025-10-28",
+   "abn_1d": 0.243,
+   "accession": "0000731766-25-000301"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 2.11,
+   "eps_estimate": 2.10607,
+   "surprise_pct": 0.19,
+   "ticker": "UNH",
+   "filed": "2026-01-27",
+   "abn_1d": -20.004,
+   "accession": "0000731766-26-000025"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 7.23,
+   "eps_estimate": 6.60176,
+   "surprise_pct": 9.520000000000001,
+   "ticker": "UNH",
+   "filed": "2026-04-21",
+   "abn_1d": 7.62,
+   "accession": "0000731766-26-000121"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 2.98,
+   "eps_estimate": 2.84683,
+   "surprise_pct": 4.68,
+   "ticker": "V",
+   "filed": "2025-07-29",
+   "abn_1d": 0.018,
+   "accession": "0001403161-25-000051"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 2.98,
+   "eps_estimate": 2.97176,
+   "surprise_pct": 0.27999999999999997,
+   "ticker": "V",
+   "filed": "2025-10-28",
+   "abn_1d": -1.668,
+   "accession": "0001403161-25-000077"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 3.17,
+   "eps_estimate": 3.14227,
+   "surprise_pct": 0.88,
+   "ticker": "V",
+   "filed": "2026-01-29",
+   "abn_1d": -2.707,
+   "accession": "0001403161-26-000044"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 3.31,
+   "eps_estimate": 3.09955,
+   "surprise_pct": 6.79,
+   "ticker": "V",
+   "filed": "2026-04-28",
+   "abn_1d": 8.279,
+   "accession": "0001403161-26-000077"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.22,
+   "eps_estimate": 1.18925,
+   "surprise_pct": 2.5899999,
+   "ticker": "VZ",
+   "filed": "2025-07-21",
+   "abn_1d": 3.851,
+   "accession": "0000732712-25-000083"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.21,
+   "eps_estimate": 1.19174,
+   "surprise_pct": 1.53,
+   "ticker": "VZ",
+   "filed": "2025-10-29",
+   "abn_1d": 2.215,
+   "accession": "0000732712-25-000114"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.09,
+   "eps_estimate": 1.0554,
+   "surprise_pct": 3.2800000000000002,
+   "ticker": "VZ",
+   "filed": "2026-01-30",
+   "abn_1d": 12.129,
+   "accession": "0000732712-26-000003"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.28,
+   "eps_estimate": 1.2097,
+   "surprise_pct": 5.81,
+   "ticker": "VZ",
+   "filed": "2026-04-27",
+   "abn_1d": 1.38,
+   "accession": "0000732712-26-000019"
+  },
+  {
+   "quarter_end": "2025-06-30",
+   "eps_actual": 1.6,
+   "eps_estimate": 1.4085,
+   "surprise_pct": 13.600000000000001,
+   "ticker": "WFC",
+   "filed": "2025-07-15",
+   "abn_1d": -5.05,
+   "accession": "0000072971-25-000170"
+  },
+  {
+   "quarter_end": "2025-09-30",
+   "eps_actual": 1.66,
+   "eps_estimate": 1.54521,
+   "surprise_pct": 7.430000000000001,
+   "ticker": "WFC",
+   "filed": "2025-10-14",
+   "abn_1d": 7.269,
+   "accession": "0000072971-25-000239"
+  },
+  {
+   "quarter_end": "2025-12-31",
+   "eps_actual": 1.62,
+   "eps_estimate": 1.66753,
+   "surprise_pct": -2.8499998,
+   "ticker": "WFC",
+   "filed": "2026-01-14",
+   "abn_1d": -4.115,
+   "accession": "0000072971-26-000009"
+  },
+  {
+   "quarter_end": "2026-03-31",
+   "eps_actual": 1.6,
+   "eps_estimate": 1.58337,
+   "surprise_pct": 1.05,
+   "ticker": "WFC",
+   "filed": "2026-04-14",
+   "abn_1d": -6.92,
+   "accession": "0000072971-26-000213"
+  },
+  {
+   "quarter_end": "2025-07-31",
+   "eps_actual": 0.68,
+   "eps_estimate": 0.73887,
+   "surprise_pct": -7.969999999999999,
+   "ticker": "WMT",
+   "filed": "2025-08-21",
+   "abn_1d": -4.093,
+   "accession": "0000104169-25-000120"
+  },
+  {
+   "quarter_end": "2025-10-31",
+   "eps_actual": 0.62,
+   "eps_estimate": 0.60128,
+   "surprise_pct": 3.11,
+   "ticker": "WMT",
+   "filed": "2025-11-20",
+   "abn_1d": 7.985,
+   "accession": "0000104169-25-000177"
+  },
+  {
+   "quarter_end": "2026-01-31",
+   "eps_actual": 0.74,
+   "eps_estimate": 0.727,
+   "surprise_pct": 1.79,
+   "ticker": "WMT",
+   "filed": "2026-02-19",
+   "abn_1d": -1.118,
+   "accession": "0000104169-26-000032"
+  },
+  {
+   "quarter_end": "2026-04-30",
+   "eps_actual": 0.66,
+   "eps_estimate": 0.65872,
+   "surprise_pct": 0.19,
+   "ticker": "WMT",
+   "filed": "2026-05-21",
+   "abn_1d": -7.466,
+   "accession": "0000104169-26-000095"
+  }
+ ]
+}
